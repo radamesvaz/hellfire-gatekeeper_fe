@@ -102,16 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Handle submit with validation
 	const form = document.getElementById('checkout-form');
 	if (form) {
-		form.addEventListener('submit', (e) => {
+		form.addEventListener('submit', async (e) => {
 			e.preventDefault();
 			if (validateCheckoutForm()) {
-				// Finalize order: simple success notification and clear cart via existing function
-				const total = (typeof cart !== 'undefined')
-					? cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.085
-					: 0;
-				showNotification(`Thank you! Order placed for $${total.toFixed(2)}`);
-				if (typeof clearCart === 'function') clearCart();
-				closeCheckoutModal();
+				await submitOrder();
 			}
 		});
 	}
@@ -234,6 +228,79 @@ function populateOrderSummary() {
 	modalSubtotal.textContent = `$${subtotal.toFixed(2)}`;
 	modalTax.textContent = `$${tax.toFixed(2)}`;
 	modalFinalTotal.textContent = `$${total.toFixed(2)}`;
+}
+
+// Function to create order payload
+function createOrderPayload() {
+	const name = document.getElementById('client-name').value.trim();
+	const email = document.getElementById('client-email').value.trim();
+	const phone = document.getElementById('client-phone').value.trim();
+	const deliveryDate = document.getElementById('delivery-date').value;
+	const note = document.getElementById('order-note').value.trim();
+
+	// Create items array from cart
+	const items = cart.map(item => ({
+		id_product: item.id,
+		quantity: item.quantity
+	}));
+
+	// Create the order payload matching the backend structure
+	const orderPayload = {
+		name: name,
+		email: email,
+		phone: phone,
+		delivery_date: deliveryDate,
+		note: note || '',
+		items: items
+	};
+
+	return orderPayload;
+}
+
+// Function to submit order to API
+async function submitOrder() {
+	const submitBtn = document.querySelector('#checkout-form button[type="submit"]');
+	let originalText = 'Place order';
+	
+	try {
+		// Show loading state
+		if (submitBtn) {
+			originalText = submitBtn.textContent;
+			submitBtn.disabled = true;
+			submitBtn.textContent = 'Processing...';
+		}
+
+		// Create order payload
+		const orderPayload = createOrderPayload();
+		
+		debugLog('Submitting order:', orderPayload);
+
+		// Submit order to API
+		const order = await apiService.createOrder(orderPayload);
+		
+		debugLog('Order created successfully:', order);
+
+		// Show success notification
+		const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.085;
+		showNotification(`¡Orden creada exitosamente! Total: $${total.toFixed(2)}`, 'success');
+
+		// Clear cart and close modal
+		if (typeof clearCart === 'function') clearCart();
+		closeCheckoutModal();
+
+	} catch (error) {
+		errorLog('Failed to create order:', error);
+		
+		// Show error notification
+		showNotification('Error al crear la orden. Por favor intenta de nuevo.', 'error');
+		
+	} finally {
+		// Reset button state
+		if (submitBtn) {
+			submitBtn.disabled = false;
+			submitBtn.textContent = originalText;
+		}
+	}
 }
 
 

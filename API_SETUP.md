@@ -24,8 +24,8 @@ const CONFIG = {
             production: 'https://api.sweetdreamsbakery.com' // Servidor de producción
         },
         endpoints: {
-            products: '/api/products',
-            orders: '/api/orders'
+            products: '/products',
+            orders: '/orders'
         }
     },
     
@@ -62,9 +62,23 @@ La aplicación espera los siguientes endpoints en tu servidor:
 ```
 
 #### 2. Órdenes
-- **POST** `/api/orders` - Crear una nueva orden
-- **GET** `/api/orders/:id` - Obtener una orden específica
-- **GET** `/api/orders/user/:userId` - Obtener órdenes de un usuario
+- **POST** `/orders` - Crear una nueva orden
+- **GET** `/orders/:id` - Obtener una orden específica
+- **GET** `/orders/user/:userId` - Obtener órdenes de un usuario
+
+**Formato del payload para crear orden:**
+```json
+{
+    "name": "Cliente Prueba integracion",
+    "email": "clienteprueba@example.com",
+    "phone": "1234567890",
+    "delivery_date": "2025-01-05",
+    "note": "make it bright",
+    "items": [
+        { "id_product": 1, "quantity": 2 }
+    ]
+}
+```
 
 ### Modos de Operación
 
@@ -110,6 +124,9 @@ La aplicación espera los siguientes endpoints en tu servidor:
 - ✅ Fallback a datos locales si la API falla
 - ✅ Carrito manejado localmente (sin API)
 - ✅ Envío de órdenes a la API al completar checkout
+- ✅ Payload de órdenes con estructura correcta del backend
+- ✅ Validación de formulario de checkout
+- ✅ Estados de carga durante el envío de órdenes
 - ✅ Notificaciones de error y éxito
 - ✅ Logging de debug
 - ✅ Validación de stock
