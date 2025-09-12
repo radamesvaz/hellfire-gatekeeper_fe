@@ -16,7 +16,7 @@ const CONFIG = {
         // API endpoints
         endpoints: {
             products: '/products',
-            orders: '/api/orders'
+            orders: '/orders'
         },
         
         
