@@ -1,0 +1,507 @@
+// Product data - array of bakery items with images, names, descriptions, and prices
+const products = [
+    {
+        id: 1,
+        name: "Chocolate Croissant",
+        description: "Buttery, flaky croissant filled with rich dark chocolate",
+        price: 3.99,
+        image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop",
+        quantity: 0,
+        stock: 10
+    },
+    {
+        id: 2,
+        name: "Blueberry Muffin",
+        description: "Moist muffin bursting with fresh blueberries and a sweet crumb topping",
+        price: 2.99,
+        image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
+        quantity: 0,
+        stock: 8
+    },
+    {
+        id: 3,
+        name: "Sourdough Bread",
+        description: "Artisan sourdough with a crispy crust and tangy flavor",
+        price: 5.99,
+        image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&h=300&fit=crop",
+        quantity: 0,
+        stock: 5
+    },
+    {
+        id: 4,
+        name: "Cinnamon Roll",
+        description: "Soft, gooey cinnamon roll with cream cheese frosting",
+        price: 4.49,
+        image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
+        quantity: 0,
+        stock: 12
+    },
+    {
+        id: 5,
+        name: "Apple Pie",
+        description: "Classic apple pie with flaky crust and warm cinnamon apples",
+        price: 6.99,
+        image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=400&h=300&fit=crop",
+        quantity: 0,
+        stock: 3
+    },
+    {
+        id: 6,
+        name: "Chocolate Chip Cookies",
+        description: "Warm, chewy cookies loaded with chocolate chips",
+        price: 2.49,
+        image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&h=300&fit=crop",
+        quantity: 0,
+        stock: 15
+    }
+];
+
+// Cart array to store items
+let cart = [];
+
+// Initialize the application when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Load cart from localStorage
+    loadCart();
+    
+    // Check which page we're on and initialize accordingly
+    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+        initializeHomePage();
+    } else if (window.location.pathname.includes('cart.html')) {
+        initializeCartPage();
+    }
+    
+    // Update cart count display
+    updateCartCount();
+});
+
+// Function to initialize the home page (product catalog)
+const initializeHomePage = () => {
+    const productsGrid = document.getElementById('products-grid');
+    if (productsGrid) {
+        displayProducts(productsGrid);
+    }
+};
+
+// Function to initialize the cart page
+const initializeCartPage = () => {
+    displayCart();
+    calculateTotal();
+};
+
+// Function to display products in the catalog
+const displayProducts = (container) => {
+    container.innerHTML = '';
+    
+    products.forEach(product => {
+        const productCard = createProductCard(product);
+        container.appendChild(productCard);
+    });
+    
+    // Update quantity displays after creating cards
+    products.forEach(product => {
+        const cartItem = cart.find(item => item.id === product.id);
+        const quantity = cartItem ? cartItem.quantity : 0;
+        updateProductCardQuantity(product.id, quantity);
+    });
+};
+
+// Function to create a product card element
+const createProductCard = (product) => {
+    const card = document.createElement('div');
+    card.className = 'product-card';
+    
+    // Get current quantity from cart
+    const cartItem = cart.find(item => item.id === product.id);
+    const currentQuantity = cartItem ? cartItem.quantity : 0;
+    
+    // Check if we can add more (stock limit)
+    const canAddMore = currentQuantity < product.stock;
+    const addButtonDisabled = !canAddMore ? 'disabled' : '';
+    const addButtonClass = canAddMore ? 'btn btn-primary' : 'btn btn-primary disabled';
+    
+    card.innerHTML = `
+        <img src="${product.image}" alt="${product.name}" class="product-image">
+        <div class="product-info">
+            <h3 class="product-name">${product.name}</h3>
+            <p class="product-description">${product.description}</p>
+            <div class="product-price">$${product.price.toFixed(2)}</div>
+            <div class="quantity-controls">
+                <button class="btn btn-primary" onclick="updateQuantity(${product.id}, -1)">
+                    -1
+                </button>
+                <span class="quantity-display">${currentQuantity}</span>
+                <button class="${addButtonClass}" onclick="updateQuantity(${product.id}, 1)" ${addButtonDisabled}>
+                    +1
+                </button>
+            </div>
+        </div>
+    `;
+    
+    return card;
+};
+
+// Function to add a product to the cart
+const addToCart = (productId) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    // Check if product is already in cart
+    const existingItem = cart.find(item => item.id === productId);
+    
+    if (existingItem) {
+        // Increment quantity if product already exists
+        existingItem.quantity += 1;
+    } else {
+        // Add new product to cart
+        cart.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: 1
+        });
+    }
+    
+    // Save cart to localStorage
+    saveCart();
+    
+    // Update cart count display
+    updateCartCount();
+    
+    // Show success message
+    showNotification(`${product.name} added to cart!`);
+};
+
+// Function to remove a product from the cart
+const removeFromCart = (productId) => {
+    cart = cart.filter(item => item.id !== productId);
+    saveCart();
+    updateCartCount();
+    
+    // Update all product cards to reflect the new cart state
+    products.forEach(product => {
+        const cartItem = cart.find(item => item.id === product.id);
+        const quantity = cartItem ? cartItem.quantity : 0;
+        updateProductCardQuantity(product.id, quantity);
+    });
+    
+    displayCart();
+    calculateTotal();
+    showNotification('Item removed from cart');
+};
+
+// Function to update product quantity in cart
+const updateQuantity = (productId, change) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
+    const item = cart.find(item => item.id === productId);
+    
+    if (item) {
+        // Product is already in cart
+        const newQuantity = item.quantity + change;
+        
+        // Check stock limit when increasing quantity
+        if (change > 0 && newQuantity > product.stock) {
+            showNotification(`Sorry, only ${product.stock} ${product.name} available in stock!`);
+            return;
+        }
+        
+        item.quantity = newQuantity;
+        
+        // Remove item if quantity becomes 0 or less
+        if (item.quantity <= 0) {
+            removeFromCart(productId);
+            return;
+        }
+        
+        saveCart();
+        updateCartCount();
+        
+        // Update quantity display on product card if on home page
+        updateProductCardQuantity(productId, item.quantity);
+        
+        // Update cart display if on cart page
+        if (window.location.pathname.includes('cart.html')) {
+            displayCart();
+            calculateTotal();
+        }
+    } else if (change > 0) {
+        // Product is not in cart and we're adding (change > 0)
+        // Check stock limit
+        if (1 > product.stock) {
+            showNotification(`Sorry, only ${product.stock} ${product.name} available in stock!`);
+            return;
+        }
+        
+        cart.push({
+            id: product.id,
+            name: product.name,
+            price: product.price,
+            image: product.image,
+            quantity: 1
+        });
+        
+        saveCart();
+        updateCartCount();
+        
+        // Update quantity display on product card
+        updateProductCardQuantity(productId, 1);
+        
+        // Show success message
+        showNotification(`${product.name} added to cart!`);
+    } else if (change < 0) {
+        // Product is not in cart and we're trying to remove (change < 0)
+        // Do nothing - can't remove what's not there
+        return;
+    }
+};
+
+// Function to update quantity display on product cards
+const updateProductCardQuantity = (productId, quantity) => {
+    const productCards = document.querySelectorAll('.product-card');
+    productCards.forEach(card => {
+        // Check if this card contains buttons for the specific product
+        const minusButton = card.querySelector(`button[onclick*="updateQuantity(${productId}, -1)"]`);
+        const plusButton = card.querySelector(`button[onclick*="updateQuantity(${productId}, 1)"]`);
+        
+        // Only update this card if it contains buttons for the specific product
+        if (minusButton || plusButton) {
+            const quantityDisplay = card.querySelector('.quantity-display');
+            
+            if (quantityDisplay) {
+                quantityDisplay.textContent = quantity;
+            }
+            
+            if (minusButton) {
+                // Show/hide minus button based on quantity
+                if (quantity > 0) {
+                    minusButton.style.display = 'inline-block';
+                } else {
+                    minusButton.style.display = 'none';
+                }
+            }
+            
+            // Update plus button state based on stock limit
+            if (plusButton) {
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    const canAddMore = quantity < product.stock;
+                    if (canAddMore) {
+                        plusButton.disabled = false;
+                        plusButton.classList.remove('disabled');
+                    } else {
+                        plusButton.disabled = true;
+                        plusButton.classList.add('disabled');
+                    }
+                }
+            }
+        }
+    });
+};
+
+// Function to display cart items
+const displayCart = () => {
+    const cartItems = document.getElementById('cart-items');
+    const emptyCart = document.getElementById('empty-cart');
+    const cartSummary = document.getElementById('cart-summary');
+    
+    if (!cartItems) return;
+    
+    if (cart.length === 0) {
+        // Show empty cart message
+        if (emptyCart) emptyCart.classList.remove('hidden');
+        if (cartSummary) cartSummary.classList.add('hidden');
+        cartItems.innerHTML = '';
+    } else {
+        // Hide empty cart message and show cart items
+        if (emptyCart) emptyCart.classList.add('hidden');
+        if (cartSummary) cartSummary.classList.remove('hidden');
+        
+        cartItems.innerHTML = '';
+        
+        cart.forEach(item => {
+            const cartItem = createCartItemElement(item);
+            cartItems.appendChild(cartItem);
+        });
+    }
+};
+
+// Function to create a cart item element
+const createCartItemElement = (item) => {
+    const cartItem = document.createElement('div');
+    cartItem.className = 'cart-item';
+    
+    const totalPrice = (item.price * item.quantity).toFixed(2);
+    
+    // Get product stock information
+    const product = products.find(p => p.id === item.id);
+    const canAddMore = product ? item.quantity < product.stock : false;
+    const addButtonDisabled = !canAddMore ? 'disabled' : '';
+    const addButtonClass = canAddMore ? 'quantity-btn' : 'quantity-btn disabled';
+    
+    cartItem.innerHTML = `
+        <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+        <div class="cart-item-info">
+            <div class="cart-item-name">${item.name}</div>
+            <div class="cart-item-price">$${item.price.toFixed(2)} each</div>
+        </div>
+        <div class="cart-item-quantity">
+            <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+            <span class="quantity-display">${item.quantity}</span>
+            <button class="${addButtonClass}" onclick="updateQuantity(${item.id}, 1)" ${addButtonDisabled}>+</button>
+        </div>
+        <div class="cart-item-total">$${totalPrice}</div>
+        <button class="remove-btn" onclick="removeFromCart(${item.id})" title="Remove item">×</button>
+    `;
+    
+    return cartItem;
+};
+
+// Function to calculate and display cart total
+const calculateTotal = () => {
+    const subtotalElement = document.getElementById('subtotal');
+    const taxElement = document.getElementById('tax');
+    const totalElement = document.getElementById('total');
+    
+    if (!subtotalElement || !taxElement || !totalElement) return;
+    
+    // Calculate subtotal
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    
+    // Calculate tax (8.5%)
+    const tax = subtotal * 0.085;
+    
+    // Calculate total
+    const total = subtotal + tax;
+    
+    // Update display
+    subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+    taxElement.textContent = `$${tax.toFixed(2)}`;
+    totalElement.textContent = `$${total.toFixed(2)}`;
+};
+
+// Function to update cart count in header
+const updateCartCount = () => {
+    const cartCountElements = document.querySelectorAll('#cart-count');
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    
+    cartCountElements.forEach(element => {
+        element.textContent = totalItems;
+    });
+};
+
+// Function to save cart to localStorage
+const saveCart = () => {
+    localStorage.setItem('bakeryCart', JSON.stringify(cart));
+};
+
+// Function to load cart from localStorage
+const loadCart = () => {
+    const savedCart = localStorage.getItem('bakeryCart');
+    if (savedCart) {
+        cart = JSON.parse(savedCart);
+    }
+};
+
+// Function to clear cart (for checkout)
+const clearCart = () => {
+    cart = [];
+    saveCart();
+    updateCartCount();
+    displayCart();
+    calculateTotal();
+};
+
+// Function to show notification
+const showNotification = (message) => {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100%);
+        background: #4CAF50;
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 1000;
+        transition: transform 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 200px;
+        max-width: 300px;
+    `;
+    
+    // Create message text
+    const messageText = document.createElement('span');
+    messageText.textContent = message;
+    messageText.style.flex = '1';
+    
+    // Create dismiss button
+    const dismissBtn = document.createElement('button');
+    dismissBtn.innerHTML = '×';
+    dismissBtn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        transition: background-color 0.2s ease;
+    `;
+    
+    // Add hover effect to dismiss button
+    dismissBtn.addEventListener('mouseenter', () => {
+        dismissBtn.style.backgroundColor = 'rgba(255,255,255,0.2)';
+    });
+    
+    dismissBtn.addEventListener('mouseleave', () => {
+        dismissBtn.style.backgroundColor = 'transparent';
+    });
+    
+    // Add dismiss functionality
+    const dismissNotification = () => {
+        notification.style.transform = 'translateX(-50%) translateY(-100%)';
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    };
+    
+    dismissBtn.addEventListener('click', dismissNotification);
+    
+    // Add elements to notification
+    notification.appendChild(messageText);
+    notification.appendChild(dismissBtn);
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(-50%) translateY(0)';
+    }, 100);
+    
+    // Auto-remove after 4 seconds (increased from 3 to give more time to read)
+    const autoRemoveTimeout = setTimeout(dismissNotification, 4000);
+    
+    // Clear auto-remove timeout if manually dismissed
+    dismissBtn.addEventListener('click', () => {
+        clearTimeout(autoRemoveTimeout);
+    });
+};
+
+// Checkout logic is handled in checkout.js (modal + validation)
