@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Configuration - Sweet Dreams Bakery</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { border-color: #4CAF50; background-color: #f1f8e9; }
+        .error { border-color: #f44336; background-color: #ffebee; }
+        .warning { border-color: #ff9800; background-color: #fff3e0; }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #45a049; }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sweet Dreams Bakery - Configuration Test</h1>
+        
+        <div class="test-section">
+            <h3>Configuration Status</h3>
+            <div id="config-status">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>API Endpoints</h3>
+            <div id="api-endpoints">Loading...</div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test API Connection</h3>
+            <button onclick="testApiConnection()">Test Products API</button>
+            <button onclick="testLocalData()">Test Local Data</button>
+            <div id="api-test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Configuration Details</h3>
+            <pre id="config-details"></pre>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="api.js"></script>
+    <script>
+        // Test configuration on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            testConfiguration();
+        });
+
+        function testConfiguration() {
+            const configStatus = document.getElementById('config-status');
+            const apiEndpoints = document.getElementById('api-endpoints');
+            const configDetails = document.getElementById('config-details');
+
+            try {
+                // Test if CONFIG is available
+                if (typeof CONFIG !== 'undefined') {
+                    configStatus.innerHTML = '<span style="color: green;">✅ Configuration loaded successfully</span>';
+                    configStatus.parentElement.className = 'test-section success';
+                } else {
+                    configStatus.innerHTML = '<span style="color: red;">❌ Configuration not found</span>';
+                    configStatus.parentElement.className = 'test-section error';
+                    return;
+                }
+
+                // Test API endpoints
+                const endpoints = [
+                    { name: 'Products', url: getProductsApiUrl() },
+                    { name: 'Orders', url: getOrdersApiUrl() }
+                ];
+
+                let endpointsHtml = '<ul>';
+                endpoints.forEach(endpoint => {
+                    endpointsHtml += `<li><strong>${endpoint.name}:</strong> ${endpoint.url}</li>`;
+                });
+                endpointsHtml += '</ul>';
+
+                apiEndpoints.innerHTML = endpointsHtml;
+                apiEndpoints.parentElement.className = 'test-section success';
+
+                // Show configuration details
+                configDetails.textContent = JSON.stringify(CONFIG, null, 2);
+
+            } catch (error) {
+                configStatus.innerHTML = `<span style="color: red;">❌ Error: ${error.message}</span>`;
+                configStatus.parentElement.className = 'test-section error';
+            }
+        }
+
+        async function testApiConnection() {
+            const resultDiv = document.getElementById('api-test-result');
+            resultDiv.innerHTML = 'Testing API connection...';
+            resultDiv.parentElement.className = 'test-section';
+
+            try {
+                if (CONFIG.features.enableApiIntegration) {
+                    const products = await apiService.getProducts();
+                    resultDiv.innerHTML = `
+                        <div style="color: green;">
+                            ✅ API connection successful!<br>
+                            Received ${products.length} products from API.
+                        </div>
+                    `;
+                    resultDiv.parentElement.className = 'test-section success';
+                } else {
+                    resultDiv.innerHTML = `
+                        <div style="color: orange;">
+                            ⚠️ API integration is disabled in configuration.<br>
+                            Set enableApiIntegration: true to test API connection.
+                        </div>
+                    `;
+                    resultDiv.parentElement.className = 'test-section warning';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div style="color: red;">
+                        ❌ API connection failed:<br>
+                        ${error.message}<br><br>
+                        This is expected if the backend server is not running.
+                    </div>
+                `;
+                resultDiv.parentElement.className = 'test-section error';
+            }
+        }
+
+        function testLocalData() {
+            const resultDiv = document.getElementById('api-test-result');
+            
+            // Simulate local products data
+            const localProducts = [
+                { id: 1, name: "Chocolate Croissant", price: 3.99, stock: 10 },
+                { id: 2, name: "Blueberry Muffin", price: 2.99, stock: 8 },
+                { id: 3, name: "Sourdough Bread", price: 5.99, stock: 5 }
+            ];
+
+            resultDiv.innerHTML = `
+                <div style="color: green;">
+                    ✅ Local data test successful!<br>
+                    Local products available: ${localProducts.length}<br>
+                    <pre>${JSON.stringify(localProducts, null, 2)}</pre>
+                </div>
+            `;
+            resultDiv.parentElement.className = 'test-section success';
+        }
+    </script>
+</body>
+</html>

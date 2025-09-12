@@ -1,5 +1,5 @@
-// Product data - array of bakery items with images, names, descriptions, and prices
-const products = [
+// Product data - fallback local data when API is not available
+const localProducts = [
     {
         id: 1,
         name: "Chocolate Croissant",
@@ -56,13 +56,19 @@ const products = [
     }
 ];
 
+// Global products array - will be populated from API or local data
+let products = [];
+
 // Cart array to store items
 let cart = [];
 
 // Initialize the application when the page loads
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Load cart from localStorage
     loadCart();
+    
+    // Load products from API or use local data
+    await loadProducts();
     
     // Check which page we're on and initialize accordingly
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
@@ -74,6 +80,59 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update cart count display
     updateCartCount();
 });
+
+// Function to load products from API or use local data
+const loadProducts = async () => {
+    try {
+        if (CONFIG.features.enableApiIntegration) {
+            debugLog('Loading products from API...');
+            const apiProducts = await apiService.getProducts();
+            
+            // Transform API products to match our local format
+            products = apiProducts.map(product => ({
+                id: product.id_product,
+                name: product.name,
+                description: product.description,
+                price: parseFloat(product.price),
+                image: product.image_urls && product.image_urls.length > 0 
+                    ? `${getApiBaseUrl()}${product.image_urls[0]}` 
+                    : 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop', // Fallback image
+                quantity: 0,
+                stock: product.stock || 0,
+                available: product.available,
+                status: product.status
+            }));
+            
+            debugLog('Products loaded from API:', products);
+        } else {
+            debugLog('Using local products data');
+            products = [...localProducts];
+        }
+    } catch (error) {
+        errorLog('Failed to load products from API, falling back to local data:', error);
+        products = [...localProducts];
+        
+        // Show user-friendly notification
+        if (CONFIG.features.enableNotifications) {
+            showNotification('Using offline mode - some features may be limited', 'warning');
+        }
+    }
+};
+
+// Function to refresh products from API
+const refreshProducts = async () => {
+    if (CONFIG.features.enableApiIntegration) {
+        await loadProducts();
+        
+        // Update the display if we're on the home page
+        if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+            const productsGrid = document.getElementById('products-grid');
+            if (productsGrid) {
+                displayProducts(productsGrid);
+            }
+        }
+    }
+};
 
 // Function to initialize the home page (product catalog)
 const initializeHomePage = () => {
@@ -115,13 +174,20 @@ const createProductCard = (product) => {
     const cartItem = cart.find(item => item.id === product.id);
     const currentQuantity = cartItem ? cartItem.quantity : 0;
     
-    // Check if we can add more (stock limit)
-    const canAddMore = currentQuantity < product.stock;
+    // Check if product is available and has stock
+    const isProductAvailable = product.available && product.status === 'active';
+    const canAddMore = isProductAvailable && currentQuantity < product.stock;
     const addButtonDisabled = !canAddMore ? 'disabled' : '';
     const addButtonClass = canAddMore ? 'btn btn-primary' : 'btn btn-primary disabled';
     
+    // Add unavailable indicator if product is not available
+    const unavailableIndicator = !isProductAvailable ? '<div class="unavailable-overlay">No disponible</div>' : '';
+    
     card.innerHTML = `
-        <img src="${product.image}" alt="${product.name}" class="product-image">
+        <div class="product-image-container">
+            <img src="${product.image}" alt="${product.name}" class="product-image">
+            ${unavailableIndicator}
+        </div>
         <div class="product-info">
             <h3 class="product-name">${product.name}</h3>
             <p class="product-description">${product.description}</p>
@@ -174,8 +240,11 @@ const addToCart = (productId) => {
 };
 
 // Function to remove a product from the cart
-const removeFromCart = (productId) => {
+const removeFromCart = async (productId) => {
     cart = cart.filter(item => item.id !== productId);
+    
+        // Cart is managed locally only - no API sync needed
+    
     saveCart();
     updateCartCount();
     
@@ -192,9 +261,16 @@ const removeFromCart = (productId) => {
 };
 
 // Function to update product quantity in cart
-const updateQuantity = (productId, change) => {
+const updateQuantity = async (productId, change) => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
+    
+    // Check if product is available before allowing changes
+    const isProductAvailable = product.available && product.status === 'active';
+    if (!isProductAvailable && change > 0) {
+        showNotification(`${product.name} no está disponible`, 'warning');
+        return;
+    }
     
     const item = cart.find(item => item.id === productId);
     
@@ -204,7 +280,7 @@ const updateQuantity = (productId, change) => {
         
         // Check stock limit when increasing quantity
         if (change > 0 && newQuantity > product.stock) {
-            showNotification(`Sorry, only ${product.stock} ${product.name} available in stock!`);
+            showNotification(`Sorry, only ${product.stock} ${product.name} available in stock!`, 'warning');
             return;
         }
         
@@ -215,6 +291,8 @@ const updateQuantity = (productId, change) => {
             removeFromCart(productId);
             return;
         }
+        
+        // Cart is managed locally only - no API sync needed
         
         saveCart();
         updateCartCount();
@@ -231,7 +309,7 @@ const updateQuantity = (productId, change) => {
         // Product is not in cart and we're adding (change > 0)
         // Check stock limit
         if (1 > product.stock) {
-            showNotification(`Sorry, only ${product.stock} ${product.name} available in stock!`);
+            showNotification(`Sorry, only ${product.stock} ${product.name} available in stock!`, 'warning');
             return;
         }
         
@@ -242,6 +320,8 @@ const updateQuantity = (productId, change) => {
             image: product.image,
             quantity: 1
         });
+        
+        // Cart is managed locally only - no API sync needed
         
         saveCart();
         updateCartCount();
@@ -283,11 +363,12 @@ const updateProductCardQuantity = (productId, quantity) => {
                 }
             }
             
-            // Update plus button state based on stock limit
+            // Update plus button state based on stock limit and availability
             if (plusButton) {
                 const product = products.find(p => p.id === productId);
                 if (product) {
-                    const canAddMore = quantity < product.stock;
+                    const isProductAvailable = product.available && product.status === 'active';
+                    const canAddMore = isProductAvailable && quantity < product.stock;
                     if (canAddMore) {
                         plusButton.disabled = false;
                         plusButton.classList.remove('disabled');
@@ -415,15 +496,22 @@ const clearCart = () => {
 };
 
 // Function to show notification
-const showNotification = (message) => {
+const showNotification = (message, type = 'success') => {
     // Create notification element
     const notification = document.createElement('div');
+    
+    // Set background color based on type
+    let backgroundColor = '#4CAF50'; // Default success (green)
+    if (type === 'error') backgroundColor = '#f44336'; // Red
+    if (type === 'warning') backgroundColor = '#ff9800'; // Orange
+    if (type === 'info') backgroundColor = '#2196F3'; // Blue
+    
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         left: 50%;
         transform: translateX(-50%) translateY(-100%);
-        background: #4CAF50;
+        background: ${backgroundColor};
         color: white;
         padding: 1rem 2rem;
         border-radius: 10px;
