@@ -37,9 +37,16 @@ const CONFIG = {
         notificationDuration: 4000 // milliseconds
     },
     
+    // WhatsApp Configuration
+    whatsapp: {
+        phoneNumber: '+584142493918',
+        enabled: true, // Habilitar/deshabilitar integración con WhatsApp
+        messageTemplate: '¡Hola! Quiero hacer un pedido:\n\n📋 *Resumen del Pedido:*\n{items}\n\n💰 *Total: ${total}*\n\n👤 *Datos del Cliente:*\n• Nombre: {name}\n• Teléfono: {phone}\n• Email: {email}\n• Fecha de entrega: {deliveryDate}\n\n{note}\n\n¿Podrías confirmar el pedido y coordinar la entrega?'
+    },
+    
     // Feature flags
     features: {
-        enableApiIntegration: true, // Toggle between API and local data
+        enableApiIntegration: false, // Toggle between API and local data
         enableNotifications: true,
         enableLocalStorage: true,
         enableStockValidation: true
