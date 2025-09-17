@@ -120,7 +120,7 @@ body {
 
 .hero p {
     font-size: 1.2rem;
-    color: #6c5ce7;
+    color: #2d5016;
     max-width: 600px;
     margin: 0 auto;
 }
@@ -281,17 +281,17 @@ body {
 
 .btn-secondary {
     background: #f8f9fa;
-    color: #6c757d;
-    border: 2px solid #dee2e6;
+    color: #5d4e37;
+    border: 2px solid #d4c4a8;
 }
 
 .btn-secondary:hover {
-    background: #e9ecef;
+    background: #f0e6d2;
     transform: translateY(-2px);
 }
 
 .btn-checkout {
-    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+    background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
     color: white;
     width: 100%;
     margin-bottom: 1rem;
@@ -299,7 +299,7 @@ body {
 
 .btn-checkout:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(116, 185, 255, 0.4);
+    box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
 }
 
 /* Cart Styles */

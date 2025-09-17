@@ -2,57 +2,69 @@
 const localProducts = [
     {
         id: 1,
-        name: "Chocolate Croissant",
-        description: "Buttery, flaky croissant filled with rich dark chocolate",
+        name: "Croissant de Chocolate",
+        description: "Croissant mantecoso y hojaldrado relleno de rico chocolate oscuro",
         price: 3.99,
         image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop",
         quantity: 0,
-        stock: 10
+        stock: 20,
+        available: true,
+        status: 'active'
     },
     {
         id: 2,
-        name: "Blueberry Muffin",
-        description: "Moist muffin bursting with fresh blueberries and a sweet crumb topping",
+        name: "Muffin de Arándanos",
+        description: "Muffin húmedo repleto de arándanos frescos con una dulce cobertura crujiente",
         price: 2.99,
         image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
         quantity: 0,
-        stock: 8
+        stock: 18,
+        available: true,
+        status: 'active'
     },
     {
         id: 3,
-        name: "Sourdough Bread",
-        description: "Artisan sourdough with a crispy crust and tangy flavor",
+        name: "Pan de Masa Madre",
+        description: "Pan de masa madre artesanal con corteza crujiente y sabor ácido",
         price: 5.99,
         image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&h=300&fit=crop",
         quantity: 0,
-        stock: 5
+        stock: 15,
+        available: true,
+        status: 'active'
     },
     {
         id: 4,
-        name: "Cinnamon Roll",
-        description: "Soft, gooey cinnamon roll with cream cheese frosting",
+        name: "Rollito de Canela",
+        description: "Rollito de canela suave y pegajoso con glaseado de queso crema",
         price: 4.49,
         image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
         quantity: 0,
-        stock: 12
+        stock: 22,
+        available: true,
+        status: 'active'
     },
     {
         id: 5,
-        name: "Apple Pie",
-        description: "Classic apple pie with flaky crust and warm cinnamon apples",
+        name: "Pastel de Manzana",
+        description: "Pastel de manzana clásico con corteza hojaldrada y manzanas con canela calientes",
         price: 6.99,
         image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=400&h=300&fit=crop",
         quantity: 0,
-        stock: 3
+        stock: 13,
+        available: true,
+        status: 'active'
     },
     {
         id: 6,
-        name: "Chocolate Chip Cookies",
-        description: "Warm, chewy cookies loaded with chocolate chips",
+        name: "Galletas de Chips de Chocolate",
+        description: "Galletas tibias y masticables cargadas de chips de chocolate",
         price: 2.49,
         image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&h=300&fit=crop",
         quantity: 0,
-        stock: 15
+        stock: 25,
+        available: true,
+        status: 'active'
     }
 ];
 
@@ -114,7 +126,7 @@ const loadProducts = async () => {
         
         // Show user-friendly notification
         if (CONFIG.features.enableNotifications) {
-            showNotification('Using offline mode - some features may be limited', 'warning');
+            showNotification('Usando modo sin conexión - algunas funciones pueden estar limitadas', 'warning');
         }
     }
 };
@@ -236,7 +248,7 @@ const addToCart = (productId) => {
     updateCartCount();
     
     // Show success message
-    showNotification(`${product.name} added to cart!`);
+    showNotification(`¡${product.name} agregado al carrito!`);
 };
 
 // Function to remove a product from the cart
@@ -257,7 +269,7 @@ const removeFromCart = async (productId) => {
     
     displayCart();
     calculateTotal();
-    showNotification('Item removed from cart');
+    showNotification('Artículo eliminado del carrito');
 };
 
 // Function to update product quantity in cart
@@ -280,7 +292,7 @@ const updateQuantity = async (productId, change) => {
         
         // Check stock limit when increasing quantity
         if (change > 0 && newQuantity > product.stock) {
-            showNotification(`Sorry, only ${product.stock} ${product.name} available in stock!`, 'warning');
+            showNotification(`¡Lo siento, solo ${product.stock} ${product.name} disponibles en stock!`, 'warning');
             return;
         }
         
@@ -309,7 +321,7 @@ const updateQuantity = async (productId, change) => {
         // Product is not in cart and we're adding (change > 0)
         // Check stock limit
         if (1 > product.stock) {
-            showNotification(`Sorry, only ${product.stock} ${product.name} available in stock!`, 'warning');
+            showNotification(`¡Lo siento, solo ${product.stock} ${product.name} disponibles en stock!`, 'warning');
             return;
         }
         
@@ -330,7 +342,7 @@ const updateQuantity = async (productId, change) => {
         updateProductCardQuantity(productId, 1);
         
         // Show success message
-        showNotification(`${product.name} added to cart!`);
+        showNotification(`¡${product.name} agregado al carrito!`);
     } else if (change < 0) {
         // Product is not in cart and we're trying to remove (change < 0)
         // Do nothing - can't remove what's not there
