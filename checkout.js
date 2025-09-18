@@ -86,7 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Wire up open/close
 	const checkoutBtn = document.getElementById('checkout-btn');
 	if (checkoutBtn) {
-		checkoutBtn.addEventListener('click', () => openCheckoutModal());
+		console.log('🛒 Checkout button found, adding event listener');
+		checkoutBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			console.log('🛒 Checkout button clicked');
+			openCheckoutModal();
+		});
+	} else {
+		console.error('❌ Checkout button not found');
 	}
 
 	modal.addEventListener('click', (e) => {
@@ -145,12 +152,18 @@ Puedes confirmar el pedido?`;
 });
 
 function openCheckoutModal() {
+	console.log('🛒 Opening checkout modal');
 	const modal = document.getElementById('checkout-modal');
-	if (!modal) return;
+	if (!modal) {
+		console.error('❌ Checkout modal not found');
+		return;
+	}
 	
+	console.log('🛒 Modal found, populating order summary');
 	// Populate order summary with current cart items
 	populateOrderSummary();
 	
+	console.log('🛒 Showing modal');
 	modal.classList.remove('hidden');
 }
 
@@ -219,21 +232,29 @@ function validateCheckoutForm() {
 }
 
 function populateOrderSummary() {
+	console.log('🛒 Populating order summary');
 	const modalCartItems = document.getElementById('modal-cart-items');
 	const modalSubtotal = document.getElementById('modal-subtotal');
 	const modalTax = document.getElementById('modal-tax');
 	const modalFinalTotal = document.getElementById('modal-final-total');
 	
-	if (!modalCartItems || !modalSubtotal || !modalTax || !modalFinalTotal) return;
+	if (!modalCartItems || !modalSubtotal || !modalTax || !modalFinalTotal) {
+		console.error('❌ Modal elements not found');
+		return;
+	}
 	
 	// Check if cart is available (from script.js)
+	console.log('🛒 Cart status:', typeof cart, cart ? cart.length : 'undefined');
 	if (typeof cart === 'undefined' || !cart.length) {
+		console.log('🛒 Cart is empty or undefined');
 		modalCartItems.innerHTML = '<p class="empty-cart-message">No hay artículos en el carrito</p>';
 		modalSubtotal.textContent = '$0.00';
 		modalTax.textContent = '$0.00';
 		modalFinalTotal.textContent = '$0.00';
 		return;
 	}
+	
+	console.log('🛒 Cart has items:', cart.length);
 	
 	// Clear previous items
 	modalCartItems.innerHTML = '';

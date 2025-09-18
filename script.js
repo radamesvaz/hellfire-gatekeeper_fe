@@ -477,13 +477,36 @@ const createCartItemElement = (item) => {
             <div class="cart-item-price">$${item.price.toFixed(2)} each</div>
         </div>
         <div class="cart-item-quantity">
-            <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+            <button class="quantity-btn" data-product-id="${item.id}" data-quantity-change="-1">-</button>
             <span class="quantity-display">${item.quantity}</span>
-            <button class="${addButtonClass}" onclick="updateQuantity(${item.id}, 1)" ${addButtonDisabled}>+</button>
+            <button class="${addButtonClass}" data-product-id="${item.id}" data-quantity-change="1" ${addButtonDisabled}>+</button>
         </div>
         <div class="cart-item-total">$${totalPrice}</div>
-        <button class="remove-btn" onclick="removeFromCart(${item.id})" title="Remove item">×</button>
+        <button class="remove-btn" data-product-id="${item.id}" title="Remove item">×</button>
     `;
+    
+    // Add event listeners for quantity buttons
+    const quantityButtons = cartItem.querySelectorAll('.quantity-btn');
+    quantityButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            const productId = parseInt(button.dataset.productId);
+            const change = parseInt(button.dataset.quantityChange);
+            console.log(`🔄 Button clicked: product ${productId}, change: ${change}`);
+            updateQuantity(productId, change);
+        });
+    });
+    
+    // Add event listener for remove button
+    const removeButton = cartItem.querySelector('.remove-btn');
+    if (removeButton) {
+        removeButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            const productId = parseInt(removeButton.dataset.productId);
+            console.log(`🗑️ Remove button clicked: product ${productId}`);
+            removeFromCart(productId);
+        });
+    }
     
     return cartItem;
 };
