@@ -462,7 +462,8 @@ const displayCart = () => {
         // Force show cart summary
         if (cartSummary) {
             cartSummary.classList.remove('hidden');
-            debugLog('Cart summary shown');
+            cartSummary.style.display = 'block';
+            debugLog('Cart summary shown and display set to block');
         }
         
         // Clear and populate cart items
@@ -664,18 +665,18 @@ const forceCalculateTotal = () => {
 
 // Function to check cart display status
 const checkCartDisplayStatus = () => {
-    debugLog('=== CART DISPLAY STATUS ===');
+    console.log('=== CART DISPLAY STATUS ===');
     
     const cartItems = document.getElementById('cart-items');
     const emptyCart = document.getElementById('empty-cart');
     const cartSummary = document.getElementById('cart-summary');
     
-    debugLog('Cart data:', {
+    console.log('Cart data:', {
         length: cart.length,
         items: cart
     });
     
-    debugLog('DOM elements:', {
+    console.log('DOM elements:', {
         cartItems: {
             element: !!cartItems,
             hidden: cartItems ? cartItems.classList.contains('hidden') : 'N/A',
@@ -691,7 +692,37 @@ const checkCartDisplayStatus = () => {
         }
     });
     
-    debugLog('=== END STATUS ===');
+    console.log('=== END STATUS ===');
+    return 'Status check complete';
+};
+
+// Function to force complete cart initialization
+const forceCompleteCartInit = () => {
+    console.log('=== FORCE COMPLETE CART INIT ===');
+    
+    // Step 1: Reload cart from localStorage
+    console.log('Step 1: Reloading cart from localStorage');
+    loadCart();
+    console.log(`Cart reloaded: ${cart.length} items`);
+    
+    // Step 2: Force display cart
+    console.log('Step 2: Force displaying cart');
+    displayCart();
+    
+    // Step 3: Force calculate total
+    console.log('Step 3: Force calculating total');
+    calculateTotal();
+    
+    // Step 4: Update cart count
+    console.log('Step 4: Updating cart count');
+    updateCartCount();
+    
+    // Step 5: Check final status
+    console.log('Step 5: Checking final status');
+    checkCartDisplayStatus();
+    
+    console.log('=== FORCE INIT COMPLETE ===');
+    return 'Force init complete';
 };
 
 // Make debug functions available globally for testing
@@ -700,6 +731,7 @@ window.forceReloadCart = forceReloadCart;
 window.forceShowCart = forceShowCart;
 window.forceCalculateTotal = forceCalculateTotal;
 window.checkCartDisplayStatus = checkCartDisplayStatus;
+window.forceCompleteCartInit = forceCompleteCartInit;
 
 // Function to show notification
 const showNotification = (message, type = 'success') => {
