@@ -10,7 +10,8 @@ const CONFIG = {
         // Base URLs for different environments
         baseUrl: {
             development: 'http://localhost:8080', // Local development server
-            production: 'https://api.sweetdreamsbakery.com' // Production server
+            production: 'https://hellfire-gatekeeper-be.onrender.com'
+
         },
         
         // API endpoints
