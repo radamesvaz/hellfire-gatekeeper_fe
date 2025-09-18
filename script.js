@@ -76,28 +76,47 @@ let cart = [];
 
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', async () => {
-    debugLog('DOMContentLoaded event fired');
+    console.log('🚀 DOMContentLoaded event fired');
     
-    // Load cart from localStorage
-    loadCart();
-    debugLog(`Cart loaded: ${cart.length} items`);
-    
-    // Load products from API or use local data
-    await loadProducts();
-    debugLog(`Products loaded: ${products.length} items`);
-    
-    // Check which page we're on and initialize accordingly
-    if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
-        debugLog('Initializing home page');
-        initializeHomePage();
-    } else if (window.location.pathname.includes('cart.html')) {
-        debugLog('Initializing cart page');
-        initializeCartPage();
+    try {
+        // Load cart from localStorage
+        loadCart();
+        console.log(`📦 Cart loaded: ${cart.length} items`);
+        
+        // Load products from API or use local data
+        await loadProducts();
+        console.log(`🛍️ Products loaded: ${products.length} items`);
+        
+        // Check which page we're on and initialize accordingly
+        if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+            console.log('🏠 Initializing home page');
+            initializeHomePage();
+        } else if (window.location.pathname.includes('cart.html')) {
+            console.log('🛒 Initializing cart page');
+            initializeCartPage();
+        }
+        
+        // Update cart count display
+        updateCartCount();
+        console.log('✅ Initialization complete');
+        
+        // Auto-fix for production
+        if (isProduction()) {
+            console.log('🌐 Production environment detected - enabling auto-fix');
+            setTimeout(() => {
+                autoFixCart();
+            }, 1500);
+        }
+        
+    } catch (error) {
+        console.error('❌ Error during initialization:', error);
+        
+        // Fallback: force complete initialization
+        console.log('🔄 Running fallback initialization');
+        setTimeout(() => {
+            forceCompleteCartInit();
+        }, 100);
     }
-    
-    // Update cart count display
-    updateCartCount();
-    debugLog('Initialization complete');
 });
 
 // Function to load products from API or use local data
@@ -165,35 +184,37 @@ const initializeHomePage = () => {
 
 // Function to initialize the cart page
 const initializeCartPage = () => {
-    debugLog('Initializing cart page');
-    debugLog(`Cart state: ${cart.length} items, Products state: ${products.length} items`);
+    console.log('🛒 Initializing cart page');
+    console.log(`📊 Cart state: ${cart.length} items, Products state: ${products.length} items`);
     
     // Ensure cart is displayed immediately
     displayCart();
     calculateTotal();
     updateCartCount();
+    console.log('🔄 Initial cart display completed');
     
-    // Additional refresh to ensure everything is properly displayed
-    setTimeout(() => {
-        debugLog('Force refreshing cart after initialization');
-        displayCart();
-        calculateTotal();
-        updateCartCount();
-    }, 200);
+    // Multiple fallbacks for production
+    const fallbacks = [100, 300, 500, 1000, 2000];
     
-    // Final refresh to catch any timing issues
-    setTimeout(() => {
-        debugLog('Final cart refresh');
-        displayCart();
-        calculateTotal();
-        updateCartCount();
-    }, 500);
-    
-    // Ultimate fallback - force complete initialization
-    setTimeout(() => {
-        debugLog('Ultimate fallback - force complete cart init');
-        forceCompleteCartInit();
-    }, 1000);
+    fallbacks.forEach((delay, index) => {
+        setTimeout(() => {
+            console.log(`🔄 Fallback ${index + 1} (${delay}ms): Refreshing cart`);
+            displayCart();
+            calculateTotal();
+            updateCartCount();
+            
+            // Check if cart is visible
+            const cartSummary = document.getElementById('cart-summary');
+            const isVisible = cartSummary && !cartSummary.classList.contains('hidden');
+            console.log(`👁️ Cart visible after fallback ${index + 1}: ${isVisible}`);
+            
+            // If still not visible and this is the last fallback, force complete init
+            if (!isVisible && index === fallbacks.length - 1) {
+                console.log('🚨 Final fallback: Force complete cart init');
+                forceCompleteCartInit();
+            }
+        }, delay);
+    });
 };
 
 // Function to display products in the catalog
@@ -767,6 +788,28 @@ const forceCartRefresh = () => {
     return 'Cart refresh complete';
 };
 
+// Function to detect production environment
+const isProduction = () => {
+    return window.location.hostname !== 'localhost' && 
+           window.location.hostname !== '127.0.0.1' &&
+           !window.location.hostname.includes('localhost');
+};
+
+// Function to auto-fix cart if not visible
+const autoFixCart = () => {
+    console.log('🔧 Auto-fixing cart...');
+    
+    const cartSummary = document.getElementById('cart-summary');
+    const isVisible = cartSummary && !cartSummary.classList.contains('hidden');
+    
+    if (!isVisible && cart.length > 0) {
+        console.log('🚨 Cart not visible but has items - forcing display');
+        forceCompleteCartInit();
+    }
+    
+    return isVisible;
+};
+
 // Make debug functions available globally for testing
 window.debugCartState = debugCartState;
 window.forceReloadCart = forceReloadCart;
@@ -775,6 +818,8 @@ window.forceCalculateTotal = forceCalculateTotal;
 window.checkCartDisplayStatus = checkCartDisplayStatus;
 window.forceCompleteCartInit = forceCompleteCartInit;
 window.forceCartRefresh = forceCartRefresh;
+window.isProduction = isProduction;
+window.autoFixCart = autoFixCart;
 
 // Function to show notification
 const showNotification = (message, type = 'success') => {
