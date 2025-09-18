@@ -188,6 +188,12 @@ const initializeCartPage = () => {
         calculateTotal();
         updateCartCount();
     }, 500);
+    
+    // Ultimate fallback - force complete initialization
+    setTimeout(() => {
+        debugLog('Ultimate fallback - force complete cart init');
+        forceCompleteCartInit();
+    }, 1000);
 };
 
 // Function to display products in the catalog
