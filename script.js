@@ -76,21 +76,28 @@ let cart = [];
 
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', async () => {
+    debugLog('DOMContentLoaded event fired');
+    
     // Load cart from localStorage
     loadCart();
+    debugLog(`Cart loaded: ${cart.length} items`);
     
     // Load products from API or use local data
     await loadProducts();
+    debugLog(`Products loaded: ${products.length} items`);
     
     // Check which page we're on and initialize accordingly
     if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+        debugLog('Initializing home page');
         initializeHomePage();
     } else if (window.location.pathname.includes('cart.html')) {
+        debugLog('Initializing cart page');
         initializeCartPage();
     }
     
     // Update cart count display
     updateCartCount();
+    debugLog('Initialization complete');
 });
 
 // Function to load products from API or use local data
@@ -159,16 +166,28 @@ const initializeHomePage = () => {
 // Function to initialize the cart page
 const initializeCartPage = () => {
     debugLog('Initializing cart page');
+    debugLog(`Cart state: ${cart.length} items, Products state: ${products.length} items`);
+    
+    // Ensure cart is displayed immediately
     displayCart();
     calculateTotal();
+    updateCartCount();
     
-    // Force cart refresh after a short delay to ensure all data is loaded
+    // Additional refresh to ensure everything is properly displayed
     setTimeout(() => {
         debugLog('Force refreshing cart after initialization');
         displayCart();
         calculateTotal();
         updateCartCount();
-    }, 100);
+    }, 200);
+    
+    // Final refresh to catch any timing issues
+    setTimeout(() => {
+        debugLog('Final cart refresh');
+        displayCart();
+        calculateTotal();
+        updateCartCount();
+    }, 500);
 };
 
 // Function to display products in the catalog
@@ -493,25 +512,48 @@ const createCartItemElement = (item) => {
 
 // Function to calculate and display cart total
 const calculateTotal = () => {
+    debugLog('Calculating total');
+    
     const subtotalElement = document.getElementById('subtotal');
     const taxElement = document.getElementById('tax');
     const totalElement = document.getElementById('total');
     
-    if (!subtotalElement || !taxElement || !totalElement) return;
+    debugLog('Total elements found:', {
+        subtotal: !!subtotalElement,
+        tax: !!taxElement,
+        total: !!totalElement
+    });
+    
+    if (!subtotalElement || !taxElement || !totalElement) {
+        errorLog('Missing total elements');
+        return;
+    }
+    
+    debugLog('Cart items for calculation:', cart);
     
     // Calculate subtotal
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = cart.reduce((sum, item) => {
+        const itemTotal = item.price * item.quantity;
+        debugLog(`Item ${item.name}: $${item.price} × ${item.quantity} = $${itemTotal}`);
+        return sum + itemTotal;
+    }, 0);
+    
+    debugLog(`Subtotal calculated: $${subtotal}`);
     
     // Calculate tax (8.5%)
     const tax = subtotal * 0.085;
+    debugLog(`Tax calculated: $${tax}`);
     
     // Calculate total
     const total = subtotal + tax;
+    debugLog(`Total calculated: $${total}`);
     
     // Update display
     subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
     taxElement.textContent = `$${tax.toFixed(2)}`;
     totalElement.textContent = `$${total.toFixed(2)}`;
+    
+    debugLog('Total display updated');
 };
 
 // Function to update cart count in header
@@ -614,10 +656,50 @@ const forceShowCart = () => {
     }
 };
 
+// Function to force calculate total (for debugging)
+const forceCalculateTotal = () => {
+    debugLog('Force calculating total');
+    calculateTotal();
+};
+
+// Function to check cart display status
+const checkCartDisplayStatus = () => {
+    debugLog('=== CART DISPLAY STATUS ===');
+    
+    const cartItems = document.getElementById('cart-items');
+    const emptyCart = document.getElementById('empty-cart');
+    const cartSummary = document.getElementById('cart-summary');
+    
+    debugLog('Cart data:', {
+        length: cart.length,
+        items: cart
+    });
+    
+    debugLog('DOM elements:', {
+        cartItems: {
+            element: !!cartItems,
+            hidden: cartItems ? cartItems.classList.contains('hidden') : 'N/A',
+            children: cartItems ? cartItems.children.length : 'N/A'
+        },
+        emptyCart: {
+            element: !!emptyCart,
+            hidden: emptyCart ? emptyCart.classList.contains('hidden') : 'N/A'
+        },
+        cartSummary: {
+            element: !!cartSummary,
+            hidden: cartSummary ? cartSummary.classList.contains('hidden') : 'N/A'
+        }
+    });
+    
+    debugLog('=== END STATUS ===');
+};
+
 // Make debug functions available globally for testing
 window.debugCartState = debugCartState;
 window.forceReloadCart = forceReloadCart;
 window.forceShowCart = forceShowCart;
+window.forceCalculateTotal = forceCalculateTotal;
+window.checkCartDisplayStatus = checkCartDisplayStatus;
 
 // Function to show notification
 const showNotification = (message, type = 'success') => {
