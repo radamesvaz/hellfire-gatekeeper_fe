@@ -87,17 +87,42 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`🛍️ Products loaded: ${products.length} items`);
         
         // Check which page we're on and initialize accordingly
+        console.log('🔍 Current pathname:', window.location.pathname);
+        
         if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
             console.log('🏠 Initializing home page');
             initializeHomePage();
         } else if (window.location.pathname.includes('cart.html')) {
             console.log('🛒 Initializing cart page');
             initializeCartPage();
+        } else {
+            console.log('❓ Unknown page, forcing cart initialization');
+            // Force cart initialization for any page that might be the cart
+            if (document.getElementById('cart-items')) {
+                console.log('🛒 Found cart elements, initializing cart page');
+                initializeCartPage();
+            }
         }
         
         // Update cart count display
         updateCartCount();
         console.log('✅ Initialization complete');
+        
+        // Force cart display after a short delay (for production)
+        setTimeout(() => {
+            console.log('🔄 Force displaying cart after initialization');
+            if (document.getElementById('cart-items')) {
+                displayCart();
+                calculateTotal();
+                updateCartCount();
+            }
+        }, 100);
+        
+        // Additional fallback for production
+        setTimeout(() => {
+            console.log('🔄 Additional fallback for production');
+            checkAndFixCart();
+        }, 500);
     }).catch(error => {
         console.error('❌ Error loading products:', error);
         // Use local products as fallback
@@ -710,6 +735,29 @@ const autoFixCart = () => {
     return isVisible;
 };
 
+// Function to check and fix cart display
+const checkAndFixCart = () => {
+    console.log('🔍 Checking cart display...');
+    
+    const cartItems = document.getElementById('cart-items');
+    const cartSummary = document.getElementById('cart-summary');
+    
+    if (cartItems && cartSummary) {
+        console.log('🛒 Cart elements found');
+        
+        if (cart.length > 0) {
+            console.log('📦 Cart has items, displaying cart');
+            displayCart();
+            calculateTotal();
+            updateCartCount();
+        } else {
+            console.log('📭 Cart is empty');
+        }
+    } else {
+        console.log('❌ Cart elements not found');
+    }
+};
+
 // Make debug functions available globally for testing
 window.debugCartState = debugCartState;
 window.forceReloadCart = forceReloadCart;
@@ -720,6 +768,7 @@ window.forceCompleteCartInit = forceCompleteCartInit;
 window.forceCartRefresh = forceCartRefresh;
 window.isProduction = isProduction;
 window.autoFixCart = autoFixCart;
+window.checkAndFixCart = checkAndFixCart;
 
 // Function to show notification
 const showNotification = (message, type = 'success') => {
