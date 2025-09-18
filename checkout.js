@@ -393,51 +393,56 @@ function openWhatsAppWithOrder(orderData, total) {
 		? new Date(orderData.delivery_date).toLocaleDateString('es-ES')
 		: 'No especificada';
 
-	// Crear mensaje más simple y corto
-	const message = `Hola! Quiero hacer un pedido:
+    // Crear mensaje más simple y corto (sin emojis ni saltos excesivos para mejor compatibilidad)
+    const message = `Hola! Quiero hacer un pedido.\n\nPedido: ${itemsList}\nTotal: $${total.toFixed(2)}\n\nDatos:\n- Nombre: ${orderData.name}\n- Telefono: ${orderData.phone}\n- Email: ${orderData.email}\n- Fecha entrega: ${deliveryDateFormatted}${noteText ? `\n${noteText}` : ''}\n\n¿Puedes confirmar el pedido?`;
 
-Pedido: ${itemsList}
-Total: $${total.toFixed(2)}
-
-Datos:
-- Nombre: ${orderData.name}
-- Telefono: ${orderData.phone}
-- Email: ${orderData.email}
-- Fecha entrega: ${deliveryDateFormatted}${noteText}
-
-Puedes confirmar el pedido?`;
-
-	// Detectar si es WhatsApp Web
-	const isWhatsAppWeb = window.location.hostname.includes('web.whatsapp.com') || 
-						  document.referrer.includes('web.whatsapp.com') ||
-						  navigator.userAgent.includes('WhatsApp');
+    // Detectar plataformas
+    const isWhatsAppWeb = window.location.hostname.includes('web.whatsapp.com') || 
+                          document.referrer.includes('web.whatsapp.com') ||
+                          navigator.userAgent.includes('WhatsApp');
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 	
 	// Debug: mostrar información
 	console.log('WhatsApp URL:', `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`);
 	console.log('Mensaje original:', message);
 	console.log('Es WhatsApp Web:', isWhatsAppWeb);
 	
-	if (isWhatsAppWeb) {
+    if (isWhatsAppWeb) {
 		// Para WhatsApp Web, mostrar modal con instrucciones
 		showWhatsAppWebInstructions(message, phoneNumber);
-	} else {
-		// Para WhatsApp móvil, usar método normal
-		openWhatsAppMobile(message, phoneNumber);
+    } else {
+        // Para WhatsApp móvil, usar método con soporte para iOS
+        openWhatsAppMobile(message, phoneNumber, { isIOS });
 	}
 }
 
 // Function to open WhatsApp mobile
-function openWhatsAppMobile(message, phoneNumber) {
+function openWhatsAppMobile(message, phoneNumber, { isIOS } = { isIOS: false }) {
 	const encodedMessage = encodeURIComponent(message);
-	const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-	
-	try {
-		window.open(whatsappUrl, '_blank');
-		showNotification('Abriendo WhatsApp para coordinar el pedido...', 'info');
-	} catch (error) {
-		console.error('Error abriendo WhatsApp:', error);
-		showWhatsAppWebInstructions(message, phoneNumber);
-	}
+    // Enlaces recomendados
+    const appUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`; // App directa
+    const webUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`; // Web fallback
+
+    try {
+        // iOS bloquea window.open después de operaciones async; navegar en la misma pestaña es más confiable
+        if (isIOS) {
+            // Intentar abrir la app primero; si falla, caer a la versión web
+            window.location.href = appUrl;
+            setTimeout(() => {
+                // Si la app no se abrió, navegar a la versión web
+                if (!document.hidden) {
+                    window.location.href = webUrl;
+                }
+            }, 800);
+        } else {
+            // Android/otros: abrir versión web en la misma pestaña para evitar bloqueos
+            window.location.href = webUrl;
+        }
+        showNotification('Abriendo WhatsApp para coordinar el pedido...', 'info');
+    } catch (error) {
+        console.error('Error abriendo WhatsApp:', error);
+        showWhatsAppWebInstructions(message, phoneNumber);
+    }
 }
 
 // Function to show instructions for WhatsApp Web
