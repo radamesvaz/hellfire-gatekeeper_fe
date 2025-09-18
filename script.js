@@ -421,21 +421,42 @@ const displayCart = () => {
     if (cart.length === 0) {
         // Show empty cart message
         debugLog('Cart is empty, showing empty cart message');
-        if (emptyCart) emptyCart.classList.remove('hidden');
-        if (cartSummary) cartSummary.classList.add('hidden');
+        if (emptyCart) {
+            emptyCart.classList.remove('hidden');
+            debugLog('Empty cart message shown');
+        }
+        if (cartSummary) {
+            cartSummary.classList.add('hidden');
+            debugLog('Cart summary hidden');
+        }
         cartItems.innerHTML = '';
     } else {
         // Hide empty cart message and show cart items
         debugLog(`Cart has ${cart.length} items, showing cart summary`);
-        if (emptyCart) emptyCart.classList.add('hidden');
-        if (cartSummary) cartSummary.classList.remove('hidden');
         
+        // Force hide empty cart
+        if (emptyCart) {
+            emptyCart.classList.add('hidden');
+            debugLog('Empty cart message hidden');
+        }
+        
+        // Force show cart summary
+        if (cartSummary) {
+            cartSummary.classList.remove('hidden');
+            debugLog('Cart summary shown');
+        }
+        
+        // Clear and populate cart items
         cartItems.innerHTML = '';
+        debugLog('Cart items cleared');
         
-        cart.forEach(item => {
+        cart.forEach((item, index) => {
+            debugLog(`Adding cart item ${index + 1}:`, item);
             const cartItem = createCartItemElement(item);
             cartItems.appendChild(cartItem);
         });
+        
+        debugLog(`Cart items populated: ${cart.length} items`);
     }
 };
 
@@ -556,9 +577,47 @@ const forceReloadCart = () => {
     updateCartCount();
 };
 
+// Function to force show cart (for debugging)
+const forceShowCart = () => {
+    debugLog('Force showing cart');
+    
+    const cartItems = document.getElementById('cart-items');
+    const emptyCart = document.getElementById('empty-cart');
+    const cartSummary = document.getElementById('cart-summary');
+    
+    if (cart.length > 0) {
+        // Force show cart summary
+        if (cartSummary) {
+            cartSummary.classList.remove('hidden');
+            debugLog('Cart summary shown');
+        }
+        
+        // Force hide empty cart
+        if (emptyCart) {
+            emptyCart.classList.add('hidden');
+            debugLog('Empty cart hidden');
+        }
+        
+        // Force populate cart items
+        if (cartItems) {
+            cartItems.innerHTML = '';
+            cart.forEach(item => {
+                const cartItem = createCartItemElement(item);
+                cartItems.appendChild(cartItem);
+            });
+            debugLog(`Cart items populated: ${cart.length} items`);
+        }
+        
+        // Force calculate total
+        calculateTotal();
+        updateCartCount();
+    }
+};
+
 // Make debug functions available globally for testing
 window.debugCartState = debugCartState;
 window.forceReloadCart = forceReloadCart;
+window.forceShowCart = forceShowCart;
 
 // Function to show notification
 const showNotification = (message, type = 'success') => {
