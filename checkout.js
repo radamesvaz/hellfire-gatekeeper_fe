@@ -2,8 +2,9 @@
 
 // Create and insert checkout modal HTML on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
-	// Only render on cart page
-	if (!window.location.pathname.includes('cart.html')) return;
+	// Initialize if cart UI is present (safer than relying on pathname)
+	const shouldInitCheckout = document.getElementById('checkout-btn') || document.getElementById('cart-items');
+	if (!shouldInitCheckout) return;
 
 	const modal = document.createElement('div');
 	modal.id = 'checkout-modal';

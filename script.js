@@ -89,10 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Check which page we're on and initialize accordingly
         console.log('🔍 Current pathname:', window.location.pathname);
         
-        if (window.location.pathname.includes('index.html') || window.location.pathname === '/') {
+        if (document.getElementById('products-grid')) {
             console.log('🏠 Initializing home page');
             initializeHomePage();
-        } else if (window.location.pathname.includes('cart.html')) {
+        } else if (document.getElementById('cart-items')) {
             console.log('🛒 Initializing cart page');
             initializeCartPage();
         } else {
@@ -361,8 +361,9 @@ const updateQuantity = (productId, change) => {
     saveCart();
     updateCartCount();
     
-    // Update display if on cart page
-    if (window.location.pathname.includes('cart.html')) {
+    // Update display if cart UI is present (don't rely on pathname in production)
+    const cartUiPresent = Boolean(document.getElementById('cart-items'));
+    if (cartUiPresent) {
         displayCart();
         calculateTotal();
     }
