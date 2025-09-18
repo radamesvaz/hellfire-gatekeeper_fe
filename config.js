@@ -47,7 +47,7 @@ const CONFIG = {
     
     // Feature flags
     features: {
-        enableApiIntegration: false, // Toggle between API and local data
+        enableApiIntegration: true, // Toggle between API and local data
         enableNotifications: true,
         enableLocalStorage: true,
         enableStockValidation: true
