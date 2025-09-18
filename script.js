@@ -100,22 +100,24 @@ const loadProducts = async () => {
             debugLog('Loading products from API...');
             const apiProducts = await apiService.getProducts();
             
-            // Transform API products to match our local format
-            products = apiProducts.map(product => ({
-                id: product.id_product,
-                name: product.name,
-                description: product.description,
-                price: parseFloat(product.price),
-                image: product.image_urls && product.image_urls.length > 0 
-                    ? `${getApiBaseUrl()}${product.image_urls[0]}` 
-                    : 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop', // Fallback image
-                quantity: 0,
-                stock: product.stock || 0,
-                available: product.available,
-                status: product.status
-            }));
+            // Filter only active products and transform to match our local format
+            products = apiProducts
+                .filter(product => product.status === 'active')
+                .map(product => ({
+                    id: product.id_product,
+                    name: product.name,
+                    description: product.description,
+                    price: parseFloat(product.price),
+                    image: product.image_urls && product.image_urls.length > 0 
+                        ? product.image_urls[0] // Use complete Cloudinary URL
+                        : 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop', // Fallback image
+                    quantity: 0,
+                    stock: product.stock || 0,
+                    available: product.available,
+                    status: product.status
+                }));
             
-            debugLog('Products loaded from API:', products);
+            debugLog(`Products loaded from API: ${products.length} active products (filtered from ${apiProducts.length} total)`, products);
         } else {
             debugLog('Using local products data');
             products = [...localProducts];
