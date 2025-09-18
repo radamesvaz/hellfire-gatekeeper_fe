@@ -75,16 +75,15 @@ let products = [];
 let cart = [];
 
 // Initialize the application when the page loads
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOMContentLoaded event fired');
     
-    try {
-        // Load cart from localStorage
-        loadCart();
-        console.log(`📦 Cart loaded: ${cart.length} items`);
-        
-        // Load products from API or use local data
-        await loadProducts();
+    // Load cart from localStorage immediately
+    loadCart();
+    console.log(`📦 Cart loaded: ${cart.length} items`);
+    
+    // Load products from API or use local data
+    loadProducts().then(() => {
         console.log(`🛍️ Products loaded: ${products.length} items`);
         
         // Check which page we're on and initialize accordingly
@@ -99,24 +98,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Update cart count display
         updateCartCount();
         console.log('✅ Initialization complete');
-        
-        // Auto-fix for production
-        if (isProduction()) {
-            console.log('🌐 Production environment detected - enabling auto-fix');
-            setTimeout(() => {
-                autoFixCart();
-            }, 1500);
-        }
-        
-    } catch (error) {
-        console.error('❌ Error during initialization:', error);
-        
-        // Fallback: force complete initialization
-        console.log('🔄 Running fallback initialization');
-        setTimeout(() => {
-            forceCompleteCartInit();
-        }, 100);
-    }
+    }).catch(error => {
+        console.error('❌ Error loading products:', error);
+        // Use local products as fallback
+        products = [...localProducts];
+        initializeCartPage();
+    });
 });
 
 // Function to load products from API or use local data
@@ -187,34 +174,12 @@ const initializeCartPage = () => {
     console.log('🛒 Initializing cart page');
     console.log(`📊 Cart state: ${cart.length} items, Products state: ${products.length} items`);
     
-    // Ensure cart is displayed immediately
+    // Simple and direct approach
     displayCart();
     calculateTotal();
     updateCartCount();
-    console.log('🔄 Initial cart display completed');
     
-    // Multiple fallbacks for production
-    const fallbacks = [100, 300, 500, 1000, 2000];
-    
-    fallbacks.forEach((delay, index) => {
-        setTimeout(() => {
-            console.log(`🔄 Fallback ${index + 1} (${delay}ms): Refreshing cart`);
-            displayCart();
-            calculateTotal();
-            updateCartCount();
-            
-            // Check if cart is visible
-            const cartSummary = document.getElementById('cart-summary');
-            const isVisible = cartSummary && !cartSummary.classList.contains('hidden');
-            console.log(`👁️ Cart visible after fallback ${index + 1}: ${isVisible}`);
-            
-            // If still not visible and this is the last fallback, force complete init
-            if (!isVisible && index === fallbacks.length - 1) {
-                console.log('🚨 Final fallback: Force complete cart init');
-                forceCompleteCartInit();
-            }
-        }, delay);
-    });
+    console.log('✅ Cart page initialized');
 };
 
 // Function to display products in the catalog
@@ -331,13 +296,11 @@ const removeFromCart = async (productId) => {
 
 // Function to update product quantity in cart
 const updateQuantity = (productId, change) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
+    console.log(`🔄 Updating quantity for product ${productId}, change: ${change}`);
     
-    // Check if product is available before allowing changes
-    const isProductAvailable = product.available && product.status === 'active';
-    if (!isProductAvailable && change > 0) {
-        showNotification(`${product.name} no está disponible`, 'warning');
+    const product = products.find(p => p.id === productId);
+    if (!product) {
+        console.error('❌ Product not found:', productId);
         return;
     }
     
@@ -346,54 +309,20 @@ const updateQuantity = (productId, change) => {
     if (item) {
         // Product is already in cart
         const newQuantity = item.quantity + change;
+        console.log(`📊 Current quantity: ${item.quantity}, new quantity: ${newQuantity}`);
         
-        // Check stock limit when increasing quantity
-        if (change > 0 && newQuantity > product.stock) {
-            showNotification(`¡Lo siento, solo ${product.stock} ${product.name} disponibles en stock!`, 'warning');
-            return;
-        }
-        
-        item.quantity = newQuantity;
-        
-        // Remove item if quantity becomes 0 or less
-        if (item.quantity <= 0) {
+        if (newQuantity <= 0) {
+            // Remove item from cart
+            console.log('🗑️ Removing item from cart');
             removeFromCart(productId);
-            return;
-        }
-        
-        // Cart is managed locally only - no API sync needed
-        
-        saveCart();
-        updateCartCount();
-        
-        // Update quantity display on product card if on home page
-        updateProductCardQuantity(productId, item.quantity);
-        
-        // Update cart display if on cart page
-        if (window.location.pathname.includes('cart.html')) {
-            displayCart();
-            calculateTotal();
-        }
-        
-        // Always update cart count
-        updateCartCount();
-        
-        // Force refresh if on cart page to ensure DOM updates
-        if (window.location.pathname.includes('cart.html')) {
-            setTimeout(() => {
-                displayCart();
-                calculateTotal();
-                updateCartCount();
-            }, 50);
+        } else {
+            // Update quantity
+            item.quantity = newQuantity;
+            console.log(`✅ Updated quantity to: ${item.quantity}`);
         }
     } else if (change > 0) {
-        // Product is not in cart and we're adding (change > 0)
-        // Check stock limit
-        if (1 > product.stock) {
-            showNotification(`¡Lo siento, solo ${product.stock} ${product.name} disponibles en stock!`, 'warning');
-            return;
-        }
-        
+        // Add new item to cart
+        console.log('➕ Adding new item to cart');
         cart.push({
             id: product.id,
             name: product.name,
@@ -401,22 +330,19 @@ const updateQuantity = (productId, change) => {
             image: product.image,
             quantity: 1
         });
-        
-        // Cart is managed locally only - no API sync needed
-        
-        saveCart();
-        updateCartCount();
-        
-        // Update quantity display on product card
-        updateProductCardQuantity(productId, 1);
-        
-        // Show success message
-        showNotification(`¡${product.name} agregado al carrito!`);
-    } else if (change < 0) {
-        // Product is not in cart and we're trying to remove (change < 0)
-        // Do nothing - can't remove what's not there
-        return;
     }
+    
+    // Always save and update display
+    saveCart();
+    updateCartCount();
+    
+    // Update display if on cart page
+    if (window.location.pathname.includes('cart.html')) {
+        displayCart();
+        calculateTotal();
+    }
+    
+    console.log(`✅ Cart updated: ${cart.length} items`);
 };
 
 // Function to update quantity display on product cards
@@ -469,53 +395,40 @@ const displayCart = () => {
     const emptyCart = document.getElementById('empty-cart');
     const cartSummary = document.getElementById('cart-summary');
     
-    debugLog(`Displaying cart: ${cart.length} items`, cart);
+    console.log(`🛒 Displaying cart: ${cart.length} items`);
     
     if (!cartItems) {
-        errorLog('Cart items container not found');
+        console.error('❌ Cart items container not found');
         return;
     }
     
     if (cart.length === 0) {
         // Show empty cart message
-        debugLog('Cart is empty, showing empty cart message');
-        if (emptyCart) {
-            emptyCart.classList.remove('hidden');
-            debugLog('Empty cart message shown');
-        }
-        if (cartSummary) {
-            cartSummary.classList.add('hidden');
-            debugLog('Cart summary hidden');
-        }
+        console.log('📭 Cart is empty, showing empty cart message');
+        if (emptyCart) emptyCart.classList.remove('hidden');
+        if (cartSummary) cartSummary.classList.add('hidden');
         cartItems.innerHTML = '';
     } else {
-        // Hide empty cart message and show cart items
-        debugLog(`Cart has ${cart.length} items, showing cart summary`);
+        // Show cart items
+        console.log(`📦 Cart has ${cart.length} items, showing cart summary`);
         
-        // Force hide empty cart
-        if (emptyCart) {
-            emptyCart.classList.add('hidden');
-            debugLog('Empty cart message hidden');
-        }
-        
-        // Force show cart summary
+        // Hide empty cart, show cart summary
+        if (emptyCart) emptyCart.classList.add('hidden');
         if (cartSummary) {
             cartSummary.classList.remove('hidden');
             cartSummary.style.display = 'block';
-            debugLog('Cart summary shown and display set to block');
         }
         
         // Clear and populate cart items
         cartItems.innerHTML = '';
-        debugLog('Cart items cleared');
         
         cart.forEach((item, index) => {
-            debugLog(`Adding cart item ${index + 1}:`, item);
+            console.log(`➕ Adding cart item ${index + 1}: ${item.name}`);
             const cartItem = createCartItemElement(item);
             cartItems.appendChild(cartItem);
         });
         
-        debugLog(`Cart items populated: ${cart.length} items`);
+        console.log(`✅ Cart items populated: ${cart.length} items`);
     }
 };
 
@@ -552,48 +465,35 @@ const createCartItemElement = (item) => {
 
 // Function to calculate and display cart total
 const calculateTotal = () => {
-    debugLog('Calculating total');
+    console.log('💰 Calculating total');
     
     const subtotalElement = document.getElementById('subtotal');
     const taxElement = document.getElementById('tax');
     const totalElement = document.getElementById('total');
     
-    debugLog('Total elements found:', {
-        subtotal: !!subtotalElement,
-        tax: !!taxElement,
-        total: !!totalElement
-    });
-    
     if (!subtotalElement || !taxElement || !totalElement) {
-        errorLog('Missing total elements');
+        console.error('❌ Missing total elements');
         return;
     }
     
-    debugLog('Cart items for calculation:', cart);
-    
     // Calculate subtotal
-    const subtotal = cart.reduce((sum, item) => {
-        const itemTotal = item.price * item.quantity;
-        debugLog(`Item ${item.name}: $${item.price} × ${item.quantity} = $${itemTotal}`);
-        return sum + itemTotal;
-    }, 0);
-    
-    debugLog(`Subtotal calculated: $${subtotal}`);
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    console.log(`📊 Subtotal: $${subtotal.toFixed(2)}`);
     
     // Calculate tax (8.5%)
     const tax = subtotal * 0.085;
-    debugLog(`Tax calculated: $${tax}`);
+    console.log(`📊 Tax: $${tax.toFixed(2)}`);
     
     // Calculate total
     const total = subtotal + tax;
-    debugLog(`Total calculated: $${total}`);
+    console.log(`📊 Total: $${total.toFixed(2)}`);
     
     // Update display
     subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
     taxElement.textContent = `$${tax.toFixed(2)}`;
     totalElement.textContent = `$${total.toFixed(2)}`;
     
-    debugLog('Total display updated');
+    console.log('✅ Total display updated');
 };
 
 // Function to update cart count in header
