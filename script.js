@@ -158,8 +158,17 @@ const initializeHomePage = () => {
 
 // Function to initialize the cart page
 const initializeCartPage = () => {
+    debugLog('Initializing cart page');
     displayCart();
     calculateTotal();
+    
+    // Force cart refresh after a short delay to ensure all data is loaded
+    setTimeout(() => {
+        debugLog('Force refreshing cart after initialization');
+        displayCart();
+        calculateTotal();
+        updateCartCount();
+    }, 100);
 };
 
 // Function to display products in the catalog
@@ -402,15 +411,22 @@ const displayCart = () => {
     const emptyCart = document.getElementById('empty-cart');
     const cartSummary = document.getElementById('cart-summary');
     
-    if (!cartItems) return;
+    debugLog(`Displaying cart: ${cart.length} items`, cart);
+    
+    if (!cartItems) {
+        errorLog('Cart items container not found');
+        return;
+    }
     
     if (cart.length === 0) {
         // Show empty cart message
+        debugLog('Cart is empty, showing empty cart message');
         if (emptyCart) emptyCart.classList.remove('hidden');
         if (cartSummary) cartSummary.classList.add('hidden');
         cartItems.innerHTML = '';
     } else {
         // Hide empty cart message and show cart items
+        debugLog(`Cart has ${cart.length} items, showing cart summary`);
         if (emptyCart) emptyCart.classList.add('hidden');
         if (cartSummary) cartSummary.classList.remove('hidden');
         
@@ -494,9 +510,18 @@ const saveCart = () => {
 
 // Function to load cart from localStorage
 const loadCart = () => {
-    const savedCart = localStorage.getItem('bakeryCart');
-    if (savedCart) {
-        cart = JSON.parse(savedCart);
+    try {
+        const savedCart = localStorage.getItem('bakeryCart');
+        if (savedCart) {
+            cart = JSON.parse(savedCart);
+            debugLog(`Cart loaded from localStorage: ${cart.length} items`, cart);
+        } else {
+            debugLog('No cart found in localStorage');
+            cart = [];
+        }
+    } catch (error) {
+        errorLog('Error loading cart from localStorage:', error);
+        cart = [];
     }
 };
 
@@ -508,6 +533,32 @@ const clearCart = () => {
     displayCart();
     calculateTotal();
 };
+
+// Function to debug cart state
+const debugCartState = () => {
+    console.log('=== CART DEBUG INFO ===');
+    console.log('Cart length:', cart.length);
+    console.log('Cart contents:', cart);
+    console.log('localStorage cart:', localStorage.getItem('bakeryCart'));
+    console.log('Cart elements:');
+    console.log('- cart-items:', document.getElementById('cart-items'));
+    console.log('- empty-cart:', document.getElementById('empty-cart'));
+    console.log('- cart-summary:', document.getElementById('cart-summary'));
+    console.log('========================');
+};
+
+// Function to force reload cart from localStorage
+const forceReloadCart = () => {
+    debugLog('Force reloading cart from localStorage');
+    loadCart();
+    displayCart();
+    calculateTotal();
+    updateCartCount();
+};
+
+// Make debug functions available globally for testing
+window.debugCartState = debugCartState;
+window.forceReloadCart = forceReloadCart;
 
 // Function to show notification
 const showNotification = (message, type = 'success') => {
