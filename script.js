@@ -309,7 +309,7 @@ const removeFromCart = async (productId) => {
 };
 
 // Function to update product quantity in cart
-const updateQuantity = async (productId, change) => {
+const updateQuantity = (productId, change) => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
     
@@ -352,6 +352,18 @@ const updateQuantity = async (productId, change) => {
         if (window.location.pathname.includes('cart.html')) {
             displayCart();
             calculateTotal();
+        }
+        
+        // Always update cart count
+        updateCartCount();
+        
+        // Force refresh if on cart page to ensure DOM updates
+        if (window.location.pathname.includes('cart.html')) {
+            setTimeout(() => {
+                displayCart();
+                calculateTotal();
+                updateCartCount();
+            }, 50);
         }
     } else if (change > 0) {
         // Product is not in cart and we're adding (change > 0)
@@ -731,6 +743,30 @@ const forceCompleteCartInit = () => {
     return 'Force init complete';
 };
 
+// Function to force cart refresh (for button updates)
+const forceCartRefresh = () => {
+    console.log('=== FORCE CART REFRESH ===');
+    
+    // Reload cart from localStorage
+    loadCart();
+    console.log(`Cart reloaded: ${cart.length} items`);
+    
+    // Force display cart
+    displayCart();
+    console.log('Cart displayed');
+    
+    // Force calculate total
+    calculateTotal();
+    console.log('Total calculated');
+    
+    // Update cart count
+    updateCartCount();
+    console.log('Cart count updated');
+    
+    console.log('=== CART REFRESH COMPLETE ===');
+    return 'Cart refresh complete';
+};
+
 // Make debug functions available globally for testing
 window.debugCartState = debugCartState;
 window.forceReloadCart = forceReloadCart;
@@ -738,6 +774,7 @@ window.forceShowCart = forceShowCart;
 window.forceCalculateTotal = forceCalculateTotal;
 window.checkCartDisplayStatus = checkCartDisplayStatus;
 window.forceCompleteCartInit = forceCompleteCartInit;
+window.forceCartRefresh = forceCartRefresh;
 
 // Function to show notification
 const showNotification = (message, type = 'success') => {
