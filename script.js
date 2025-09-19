@@ -6,6 +6,11 @@ const localProducts = [
         description: "Croissant mantecoso y hojaldrado relleno de rico chocolate oscuro",
         price: 3.99,
         image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=1200&h=900&fit=crop",
+            "https://images.unsplash.com/photo-1542826438-0bc0401f0f29?w=1200&h=900&fit=crop",
+            "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=1200&h=900&fit=crop"
+        ],
         quantity: 0,
         stock: 20,
         available: true,
@@ -17,6 +22,10 @@ const localProducts = [
         description: "Muffin húmedo repleto de arándanos frescos con una dulce cobertura crujiente",
         price: 2.99,
         image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1200&h=900&fit=crop",
+            "https://images.unsplash.com/photo-1546549039-30bf8f19f986?w=1200&h=900&fit=crop"
+        ],
         quantity: 0,
         stock: 18,
         available: true,
@@ -28,6 +37,10 @@ const localProducts = [
         description: "Pan de masa madre artesanal con corteza crujiente y sabor ácido",
         price: 5.99,
         image: "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=400&h=300&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1586444248902-2f64eddc13df?w=1200&h=900&fit=crop",
+            "https://images.unsplash.com/photo-1603190287605-e6ade32fa5cb?w=1200&h=900&fit=crop"
+        ],
         quantity: 0,
         stock: 15,
         available: true,
@@ -39,6 +52,9 @@ const localProducts = [
         description: "Rollito de canela suave y pegajoso con glaseado de queso crema",
         price: 4.49,
         image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=1200&h=900&fit=crop"
+        ],
         quantity: 0,
         stock: 22,
         available: true,
@@ -50,6 +66,10 @@ const localProducts = [
         description: "Pastel de manzana clásico con corteza hojaldrada y manzanas con canela calientes",
         price: 6.99,
         image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=400&h=300&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=1200&h=900&fit=crop",
+            "https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=1200&h=900&fit=crop"
+        ],
         quantity: 0,
         stock: 13,
         available: true,
@@ -61,6 +81,10 @@ const localProducts = [
         description: "Galletas tibias y masticables cargadas de chips de chocolate",
         price: 2.49,
         image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=400&h=300&fit=crop",
+        images: [
+            "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?w=1200&h=900&fit=crop",
+            "https://images.unsplash.com/photo-1600891963937-52b8b2c5d2b3?w=1200&h=900&fit=crop"
+        ],
         quantity: 0,
         stock: 25,
         available: true,
@@ -92,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('products-grid')) {
             console.log('🏠 Initializing home page');
             initializeHomePage();
+            initializeProductModal();
         } else if (document.getElementById('cart-items')) {
             console.log('🛒 Initializing cart page');
             initializeCartPage();
@@ -147,8 +172,13 @@ const loadProducts = async () => {
                     description: product.description,
                     price: parseFloat(product.price),
                     image: product.image_urls && product.image_urls.length > 0 
-                        ? product.image_urls[0] // Use complete Cloudinary URL
-                        : 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop', // Fallback image
+                        ? product.image_urls[0]
+                        : 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop',
+                    images: Array.isArray(product.image_urls) && product.image_urls.length > 0
+                        ? product.image_urls
+                        : [
+                            'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=1200&h=900&fit=crop'
+                        ],
                     quantity: 0,
                     stock: product.stock || 0,
                     available: product.available,
@@ -194,6 +224,121 @@ const initializeHomePage = () => {
     }
 };
 
+// Modal state
+let productModalState = {
+    open: false,
+    productId: null,
+    currentImageIndex: 0
+};
+
+// Initialize modal: wire close actions
+const initializeProductModal = () => {
+    const modal = document.getElementById('product-modal');
+    if (!modal) return;
+    modal.addEventListener('click', (e) => {
+        const target = e.target;
+        if (!target) return;
+        if (target.matches('[data-close-modal]')) {
+            closeProductModal();
+        }
+    });
+    document.addEventListener('keydown', (e) => {
+        if (productModalState.open && e.key === 'Escape') {
+            closeProductModal();
+        }
+    });
+};
+
+const openProductModal = (productId) => {
+    const modal = document.getElementById('product-modal');
+    if (!modal) return;
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    productModalState = { open: true, productId, currentImageIndex: 0 };
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+
+    // Fill info
+    const nameEl = document.getElementById('product-modal-name');
+    const priceEl = document.getElementById('product-modal-price');
+    const descEl = document.getElementById('product-modal-description');
+    const mainImg = document.getElementById('product-modal-main-img');
+    const thumbs = document.getElementById('product-modal-thumbs');
+    const minusBtn = document.getElementById('product-modal-minus');
+    const plusBtn = document.getElementById('product-modal-plus');
+    const qtyEl = document.getElementById('product-modal-quantity');
+
+    nameEl.textContent = product.name;
+    priceEl.textContent = `$${product.price.toFixed(2)} c/u`;
+    descEl.textContent = product.description;
+
+    const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : [product.image];
+    mainImg.src = images[0];
+    mainImg.alt = product.name;
+
+    thumbs.innerHTML = '';
+    images.forEach((imgUrl, index) => {
+        const thumb = document.createElement('img');
+        thumb.src = imgUrl;
+        thumb.alt = `${product.name} ${index + 1}`;
+        thumb.className = 'product-modal-thumb' + (index === 0 ? ' active' : '');
+        thumb.addEventListener('click', () => {
+            productModalState.currentImageIndex = index;
+            mainImg.src = imgUrl;
+            const allThumbs = thumbs.querySelectorAll('img');
+            allThumbs.forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+        });
+        thumbs.appendChild(thumb);
+    });
+
+    // Quantity controls wiring
+    const cartItem = cart.find(i => i.id === product.id);
+    const currentQty = cartItem ? cartItem.quantity : 0;
+    qtyEl.textContent = currentQty;
+
+    const isProductAvailable = product.available && product.status === 'active';
+    const canAddMore = isProductAvailable && currentQty < product.stock;
+
+    // Set initial disabled states
+    if (plusBtn) {
+        plusBtn.disabled = !canAddMore;
+        plusBtn.classList.toggle('disabled', !canAddMore);
+    }
+    if (minusBtn) {
+        minusBtn.style.display = currentQty > 0 ? 'inline-block' : 'none';
+    }
+
+    const handleUpdate = (change) => {
+        updateQuantity(product.id, change);
+        // After update, reflect new quantities and button states
+        const updatedItem = cart.find(i => i.id === product.id);
+        const newQty = updatedItem ? updatedItem.quantity : 0;
+        qtyEl.textContent = newQty;
+        const canAdd = isProductAvailable && newQty < product.stock;
+        if (plusBtn) {
+            plusBtn.disabled = !canAdd;
+            plusBtn.classList.toggle('disabled', !canAdd);
+        }
+        if (minusBtn) {
+            minusBtn.style.display = newQty > 0 ? 'inline-block' : 'none';
+        }
+    };
+
+    minusBtn.onclick = () => handleUpdate(-1);
+    plusBtn.onclick = () => handleUpdate(1);
+};
+
+const closeProductModal = () => {
+    const modal = document.getElementById('product-modal');
+    if (!modal) return;
+    productModalState.open = false;
+    productModalState.productId = null;
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+};
+
 // Function to initialize the cart page
 const initializeCartPage = () => {
     console.log('🛒 Initializing cart page');
@@ -228,6 +373,7 @@ const displayProducts = (container) => {
 const createProductCard = (product) => {
     const card = document.createElement('div');
     card.className = 'product-card';
+    card.dataset.productId = String(product.id);
     
     // Get current quantity from cart
     const cartItem = cart.find(item => item.id === product.id);
@@ -263,6 +409,18 @@ const createProductCard = (product) => {
         </div>
     `;
     
+    // Open modal on card click, but ignore clicks on quantity controls
+    card.addEventListener('click', (event) => {
+        const target = event.target;
+        if (!target) return;
+        const isQtyButton = (target.closest && target.closest('.quantity-controls'));
+        if (isQtyButton) {
+            return; // Let quantity buttons behave normally
+        }
+        const productId = product.id;
+        openProductModal(productId);
+    });
+
     return card;
 };
 

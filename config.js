@@ -30,7 +30,7 @@ const CONFIG = {
     
     // Application settings
     app: {
-        name: 'Sweet Dreams Bakery',
+        name: 'Confettideli',
         version: '1.0.0',
         currency: 'USD',
         taxRate: 0.085, // 8.5% tax rate

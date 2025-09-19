@@ -31,7 +31,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 					<div class="form-row">
 						<label for="client-phone">Teléfono</label>
-						<input id="client-phone" name="phone" type="tel" required placeholder="(555) 123-4567" />
+						<div class="phone-input-group">
+							<select id="phone-prefix" name="phonePrefix" required>
+								<option value="">Seleccionar</option>
+								<option value="0412">0412</option>
+								<option value="0414">0414</option>
+								<option value="0416">0416</option>
+								<option value="0422">0422</option>
+								<option value="0424">0424</option>
+								<option value="0426">0426</option>
+							</select>
+							<input id="client-phone" name="phone" type="tel" required placeholder="123-4567" />
+						</div>
 						<span class="error" data-error-for="client-phone"></span>
 					</div>
 
@@ -206,9 +217,13 @@ function validateCheckoutForm() {
 		setFieldError('client-email', '');
 	}
 
-	// Phone (simple len check; can be refined)
-	if (!phone || phone.value.trim().length < 7) {
-		setFieldError('client-phone', 'Por favor ingresa un teléfono válido');
+	// Phone validation - check both prefix and number
+	const phonePrefix = document.getElementById('phone-prefix');
+	if (!phonePrefix || !phonePrefix.value) {
+		setFieldError('client-phone', 'Por favor selecciona el prefijo telefónico');
+		valid = false;
+	} else if (!phone || phone.value.trim().length < 7) {
+		setFieldError('client-phone', 'Por favor ingresa el número de teléfono');
 		valid = false;
 	} else {
 		setFieldError('client-phone', '');
@@ -289,7 +304,9 @@ function populateOrderSummary() {
 function createOrderPayload() {
 	const name = document.getElementById('client-name').value.trim();
 	const email = document.getElementById('client-email').value.trim();
-	const phone = document.getElementById('client-phone').value.trim();
+	const phonePrefix = document.getElementById('phone-prefix').value;
+	const phoneNumber = document.getElementById('client-phone').value.trim();
+	const phone = phonePrefix + phoneNumber; // Combine prefix and number
 	const deliveryDate = document.getElementById('delivery-date').value;
 	const note = document.getElementById('order-note').value.trim();
 
