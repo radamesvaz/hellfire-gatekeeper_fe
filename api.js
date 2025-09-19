@@ -1,4 +1,4 @@
-// API service for Sweet Dreams Bakery
+// API service for Confettideli
 // This file handles all API communications
 
 class ApiService {

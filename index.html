@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panadería Dulces Sueños</title>
+    <title>Confettideli</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
     <header class="header">
         <div class="container">
             <h1 class="store-name">
-                <a href="index.html" class="logo-link">Panadería Dulces Sueños</a>
+                <a href="index.html" class="logo-link">Confettideli</a>
             </h1>
             <nav class="nav">
                 <a href="index.html" class="nav-link active">Inicio</a>
@@ -43,10 +43,40 @@
         </div>
     </main>
 
+    <!-- Product Detail Modal -->
+    <div id="product-modal" class="modal hidden" aria-hidden="true" role="dialog" aria-modal="true">
+        <div class="modal-backdrop" data-close-modal></div>
+        <div class="modal-content">
+            <button class="modal-close" title="Cerrar" data-close-modal>×</button>
+            <div class="modal-scrollable">
+                <div class="product-modal">
+                    <div class="product-modal-media">
+                        <div class="product-modal-main-image">
+                            <img id="product-modal-main-img" src="" alt="Producto" />
+                        </div>
+                        <div id="product-modal-thumbs" class="product-modal-thumbs"></div>
+                    </div>
+                    <div class="product-modal-info">
+                        <h3 id="product-modal-name"></h3>
+                        <div id="product-modal-price" class="product-price"></div>
+                        <p id="product-modal-description" class="product-description"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="form-actions">
+                <div class="quantity-controls modal-quantity-controls">
+                    <button id="product-modal-minus" class="btn btn-primary">-1</button>
+                    <span id="product-modal-quantity" class="quantity-display">0</span>
+                    <button id="product-modal-plus" class="btn btn-primary">+1</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2024 Panadería Dulces Sueños. Todos los derechos reservados.</p>
+            <p>&copy; 2024 Confettideli. Todos los derechos reservados.</p>
         </div>
     </footer>
 
