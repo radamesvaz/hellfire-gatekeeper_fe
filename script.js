@@ -344,6 +344,8 @@ const updateQuantity = (productId, change) => {
             // Update quantity
             item.quantity = newQuantity;
             console.log(`✅ Updated quantity to: ${item.quantity}`);
+            // Reflect updated quantity on product card immediately
+            updateProductCardQuantity(productId, item.quantity);
         }
     } else if (change > 0) {
         // Add new item to cart
@@ -355,6 +357,8 @@ const updateQuantity = (productId, change) => {
             image: product.image,
             quantity: 1
         });
+        // Reflect new quantity on product card immediately
+        updateProductCardQuantity(productId, 1);
     }
     
     // Always save and update display
@@ -367,6 +371,12 @@ const updateQuantity = (productId, change) => {
         displayCart();
         calculateTotal();
     }
+
+    // Also update all product cards' counters to stay in sync
+    products.forEach(p => {
+        const cartItemForProduct = cart.find(ci => ci.id === p.id);
+        updateProductCardQuantity(p.id, cartItemForProduct ? cartItemForProduct.quantity : 0);
+    });
     
     console.log(`✅ Cart updated: ${cart.length} items`);
 };
