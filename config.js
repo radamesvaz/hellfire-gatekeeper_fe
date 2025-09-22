@@ -33,7 +33,6 @@ const CONFIG = {
         name: 'Confettideli',
         version: '1.0.0',
         currency: 'USD',
-        taxRate: 0.085, // 8.5% tax rate
         maxCartItems: 50,
         notificationDuration: 4000 // milliseconds
     },

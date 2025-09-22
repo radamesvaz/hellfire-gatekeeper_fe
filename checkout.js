@@ -63,14 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
 					<h4>Resumen del Pedido</h4>
 					<div id="modal-cart-items"></div>
 					<div class="order-total">
-						<div class="total-row">
-							<span>Subtotal:</span>
-							<span id="modal-subtotal">$0.00</span>
-						</div>
-						<div class="total-row">
-							<span>Impuesto (8.5%):</span>
-							<span id="modal-tax">$0.00</span>
-						</div>
 						<div class="total-row final-total">
 							<span>Total:</span>
 							<span id="modal-final-total">$0.00</span>
@@ -250,11 +242,9 @@ function validateCheckoutForm() {
 function populateOrderSummary() {
 	console.log('🛒 Populating order summary');
 	const modalCartItems = document.getElementById('modal-cart-items');
-	const modalSubtotal = document.getElementById('modal-subtotal');
-	const modalTax = document.getElementById('modal-tax');
 	const modalFinalTotal = document.getElementById('modal-final-total');
 	
-	if (!modalCartItems || !modalSubtotal || !modalTax || !modalFinalTotal) {
+	if (!modalCartItems || !modalFinalTotal) {
 		console.error('❌ Modal elements not found');
 		return;
 	}
@@ -264,8 +254,6 @@ function populateOrderSummary() {
 	if (typeof cart === 'undefined' || !cart.length) {
 		console.log('🛒 Cart is empty or undefined');
 		modalCartItems.innerHTML = '<p class="empty-cart-message">No hay artículos en el carrito</p>';
-		modalSubtotal.textContent = '$0.00';
-		modalTax.textContent = '$0.00';
 		modalFinalTotal.textContent = '$0.00';
 		return;
 	}
@@ -290,13 +278,9 @@ function populateOrderSummary() {
 	});
 	
 	// Calculate totals
-	const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-	const tax = subtotal * 0.085;
-	const total = subtotal + tax;
+	const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 	
 	// Update totals
-	modalSubtotal.textContent = `$${subtotal.toFixed(2)}`;
-	modalTax.textContent = `$${tax.toFixed(2)}`;
 	modalFinalTotal.textContent = `$${total.toFixed(2)}`;
 }
 
@@ -360,7 +344,7 @@ async function submitOrder() {
 		debugLog('Order created successfully:', order);
 
 		// Show success notification
-		const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) * 1.085;
+		const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 		showNotification(`¡Orden creada exitosamente! Total: $${total.toFixed(2)}`, 'success');
 
 		// Open WhatsApp with order details

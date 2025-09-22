@@ -684,30 +684,18 @@ const createCartItemElement = (item) => {
 const calculateTotal = () => {
     console.log('💰 Calculating total');
     
-    const subtotalElement = document.getElementById('subtotal');
-    const taxElement = document.getElementById('tax');
     const totalElement = document.getElementById('total');
     
-    if (!subtotalElement || !taxElement || !totalElement) {
-        console.error('❌ Missing total elements');
+    if (!totalElement) {
+        console.error('❌ Missing total element');
         return;
     }
     
-    // Calculate subtotal
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    console.log(`📊 Subtotal: $${subtotal.toFixed(2)}`);
-    
-    // Calculate tax (8.5%)
-    const tax = subtotal * 0.085;
-    console.log(`📊 Tax: $${tax.toFixed(2)}`);
-    
     // Calculate total
-    const total = subtotal + tax;
+    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     console.log(`📊 Total: $${total.toFixed(2)}`);
     
     // Update display
-    subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
-    taxElement.textContent = `$${tax.toFixed(2)}`;
     totalElement.textContent = `$${total.toFixed(2)}`;
     
     console.log('✅ Total display updated');
