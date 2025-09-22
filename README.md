@@ -98,13 +98,12 @@ This application works in all modern browsers including:
 You can easily customize the application by:
 - Adding more products to the `products` array in `script.js`
 - Changing colors in `styles.css`
-- Modifying the tax rate in the `calculateTotal()` function
 - Adding new features like product categories or search functionality
 
 ## Technical Notes
 
 - Uses placeholder images from Unsplash for product photos
-- Implements a 8.5% tax rate on all purchases
+- No tax applied to purchases (prices shown are final)
 - Cart data is stored in browser's localStorage under the key 'bakeryCart'
 - All prices are displayed with 2 decimal places
 - Responsive breakpoints at 768px and 480px for mobile optimization
