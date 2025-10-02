@@ -3,7 +3,7 @@
 
 const CONFIG = {
     // Environment settings
-    environment: 'development', // 'development' | 'production'
+    environment: 'production', // 'development' | 'production'
     
     // API Configuration
     api: {
@@ -54,7 +54,7 @@ const CONFIG = {
     
     // Debug settings
     debug: {
-        enabled: true, // Set to false in production
+        enabled: false, // Set to false in production
         logApiCalls: true,
         logErrors: true
     }
