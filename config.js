@@ -3,7 +3,7 @@
 
 const CONFIG = {
     // Environment settings
-    environment: 'production', // 'development' | 'production'
+    environment: 'development', // 'development' | 'production'
     
     // API Configuration
     api: {
@@ -39,7 +39,7 @@ const CONFIG = {
     
     // WhatsApp Configuration
     whatsapp: {
-        phoneNumber: '+584142493918',
+        phoneNumber: '+584123749066',
         enabled: true, // Habilitar/deshabilitar integración con WhatsApp
         messageTemplate: '¡Hola! Quiero hacer un pedido:\n\n📋 *Resumen del Pedido:*\n{items}\n\n💰 *Total: ${total}*\n\n👤 *Datos del Cliente:*\n• Nombre: {name}\n• Teléfono: {phone}\n• Email: {email}\n• Fecha de entrega: {deliveryDate}\n\n{note}\n\n¿Podrías confirmar el pedido y coordinar la entrega?'
     },
@@ -54,7 +54,7 @@ const CONFIG = {
     
     // Debug settings
     debug: {
-        enabled: false, // Set to false in production
+        enabled: true, // Set to false in production
         logApiCalls: true,
         logErrors: true
     }
