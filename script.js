@@ -171,9 +171,11 @@ const loadProducts = async () => {
                     name: product.name,
                     description: product.description,
                     price: parseFloat(product.price),
-                    image: product.image_urls && product.image_urls.length > 0 
+                    // Use thumbnail_url for product cards and cart items (all products except modal)
+                    image: product.thumbnail_url || (product.image_urls && product.image_urls.length > 0 
                         ? product.image_urls[0]
-                        : 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop',
+                        : 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400&h=300&fit=crop'),
+                    // Keep full image_urls array for modal (when user opens product card)
                     images: Array.isArray(product.image_urls) && product.image_urls.length > 0
                         ? product.image_urls
                         : [
