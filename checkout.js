@@ -124,6 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			e.preventDefault();
 			if (validateCheckoutForm()) {
 				await submitOrder();
+			} else {
+				const firstInvalid = document.querySelector('#checkout-modal .input-error');
+				if (firstInvalid) {
+					firstInvalid.focus({ preventScroll: true });
+					smoothScrollToElement(firstInvalid, 800);
+				}
 			}
 		});
 	}
@@ -182,6 +188,38 @@ function setFieldError(inputId, message) {
 	const error = document.querySelector(`[data-error-for="${inputId}"]`);
 	if (error) error.textContent = message || '';
 	if (input) input.classList.toggle('input-error', Boolean(message));
+}
+
+/**
+ * Smooth scroll to an element inside the checkout modal's scrollable area.
+ * @param {HTMLElement} element - Element to scroll into view
+ * @param {number} durationMs - Animation duration in milliseconds
+ */
+function smoothScrollToElement(element, durationMs = 800) {
+	const container = document.querySelector('#checkout-modal .modal-scrollable');
+	if (!container || !element) return;
+
+	const start = container.scrollTop;
+	const elementRect = element.getBoundingClientRect();
+	const containerRect = container.getBoundingClientRect();
+	const elementTopInContent = elementRect.top - containerRect.top + container.scrollTop;
+	const targetScroll = elementTopInContent - container.clientHeight / 2 + element.offsetHeight / 2;
+	const distance = targetScroll - start;
+	const startTime = performance.now();
+
+	function easeInOutCubic(t) {
+		return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+	}
+
+	function step(now) {
+		const elapsed = now - startTime;
+		const progress = Math.min(elapsed / durationMs, 1);
+		const eased = easeInOutCubic(progress);
+		container.scrollTop = start + distance * eased;
+		if (progress < 1) requestAnimationFrame(step);
+	}
+
+	requestAnimationFrame(step);
 }
 
 function validateCheckoutForm() {
